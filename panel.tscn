@@ -1,0 +1,131 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbn4peoxs5qjg"]
+
+[ext_resource type="Script" uid="uid://ceajsdsg7vxwb" path="res://addons/primes/panel.gd" id="1_ph1id"]
+
+[node name="CloudPublisherPanel" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_ph1id")
+
+[node name="Root" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Root"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Root/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Cloud Publisher"
+
+[node name="Stack" type="VBoxContainer" parent="Root"]
+layout_mode = 2
+
+[node name="Publish" type="VBoxContainer" parent="Root/Stack"]
+visible = false
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="Root/Stack/Publish"]
+layout_mode = 2
+columns = 2
+
+[node name="L1" type="Label" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+text = "Name (optional)"
+
+[node name="Name" type="LineEdit" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+placeholder_text = "Leave blank to auto‑generate"
+
+[node name="L2" type="Label" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+text = "Description (optional)"
+
+[node name="Desc" type="TextEdit" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="L3" type="Label" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+text = "Thumbnail (optional)"
+
+[node name="ThumbRow" type="HBoxContainer" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+
+[node name="ThumbPath" type="LineEdit" parent="Root/Stack/Publish/Grid/ThumbRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "No file selected"
+editable = false
+
+[node name="Browse" type="Button" parent="Root/Stack/Publish/Grid/ThumbRow"]
+layout_mode = 2
+text = "Select…"
+
+[node name="L4" type="Label" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+text = "Visibility"
+
+[node name="Visibility" type="OptionButton" parent="Root/Stack/Publish/Grid"]
+layout_mode = 2
+selected = 0
+item_count = 2
+popup/item_0/text = "Public"
+popup/item_0/id = 0
+popup/item_1/text = "Private"
+popup/item_1/id = 1
+
+[node name="Grow" type="Control" parent="Root/Stack/Publish"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Row" type="HBoxContainer" parent="Root/Stack/Publish"]
+layout_mode = 2
+alignment = 2
+
+[node name="PublishBtn" type="Button" parent="Root/Stack/Publish/Row"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Publish"
+
+[node name="Log" type="RichTextLabel" parent="Root/Stack/Publish"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[i]Leave fields blank to auto‑generate name, description, thumbnail on publish.[/i]"
+
+[node name="SignIn" type="VBoxContainer" parent="Root/Stack"]
+layout_mode = 2
+
+[node name="EmailL" type="Label" parent="Root/Stack/SignIn"]
+layout_mode = 2
+text = "Email"
+
+[node name="Email" type="LineEdit" parent="Root/Stack/SignIn"]
+layout_mode = 2
+placeholder_text = "you@example.com"
+
+[node name="KeyL" type="Label" parent="Root/Stack/SignIn"]
+layout_mode = 2
+text = "API Key"
+
+[node name="Key" type="LineEdit" parent="Root/Stack/SignIn"]
+layout_mode = 2
+placeholder_text = "••••••••••••"
+secret = true
+
+[node name="SignInRow" type="HBoxContainer" parent="Root/Stack/SignIn"]
+layout_mode = 2
+alignment = 2
+
+[node name="SignInBtn" type="Button" parent="Root/Stack/SignIn/SignInRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Sign In"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.png ; PNG Images", "*.jpg ; JPEG Images", "*.jpeg ; JPEG Images")
