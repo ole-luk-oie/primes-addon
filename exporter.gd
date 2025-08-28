@@ -2,6 +2,7 @@ extends Object
 
 class_name PrimesExporter
 
+const UPLOAD_URL = "http://localhost:8080/upload"
 const PLUGIN_DIR := "res://addons/primes"
 const STUB_NAME := "__primes_stub.gd"
 const ANDROID_PLATFORM_NAME := "Android"
@@ -84,3 +85,57 @@ func _get_android_preset(log_func: Callable):
 			if platform == ANDROID_PLATFORM_NAME:
 				return preset_name
 	return null
+
+
+func upload_zip_with_meta(host: Node, zip_path: String, author: String, is_public := false, 
+							name := "", description := "") -> Dictionary:
+	var f := FileAccess.open(zip_path, FileAccess.READ)
+	if f == null:
+		return { "ok": false, "error": "Cannot open: " + zip_path }
+	var file_buf := f.get_buffer(f.get_length()); f.close()
+
+	var boundary := "----GodotBoundary" + str(Time.get_unix_time_from_system())
+	var body := PackedByteArray()
+
+	var version_info = Engine.get_version_info()
+
+	add_part(body, boundary, "author", author)
+	add_part(body, boundary, "engine", "godot%s_%s" % [version_info["major"], version_info["minor"]] )
+	if not name.is_empty(): add_part(body, boundary, "name", name)
+	if not description.is_empty(): add_part(body, boundary, "description", description)
+
+	# File part
+	body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
+	body.append_array(('Content-Disposition: form-data; name="file"; filename="%s"\r\n' % zip_path.get_file()).to_utf8_buffer())
+	body.append_array("Content-Type: application/octet-stream\r\n\r\n".to_utf8_buffer())
+	body.append_array(file_buf)
+	body.append_array("\r\n".to_utf8_buffer())
+	body.append_array(("--%s--\r\n" % boundary).to_utf8_buffer())
+
+	var headers := PackedStringArray(["Content-Type: multipart/form-data; boundary=%s" % boundary])
+
+	var http := HTTPRequest.new()
+	host.add_child(http)
+	var err := http.request_raw(UPLOAD_URL, headers, HTTPClient.METHOD_POST, body)
+	if err != OK:
+		http.queue_free()
+		return { "success": false, "error": "Upload failed to initiate: %s" % err }
+	var result = await http.request_completed
+	http.queue_free()
+
+	if result[0] == HTTPRequest.RESULT_SUCCESS && result[1] == 200:
+		return {
+			"success": true,
+			"id": (result[3] as PackedByteArray).get_string_from_utf8()
+		}
+	else:
+		return {
+			"success": false,
+			"error": "Upload falied: %s" % result[3].get_string_from_utf8()
+		}
+
+func add_part(body: PackedByteArray, boundary: String, name: String, value: String) -> void:
+	body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
+	body.append_array(('Content-Disposition: form-data; name="%s"\r\n\r\n' % name).to_utf8_buffer())
+	body.append_array(value.to_utf8_buffer())
+	body.append_array("\r\n".to_utf8_buffer())

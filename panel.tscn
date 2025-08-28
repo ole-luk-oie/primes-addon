@@ -90,6 +90,7 @@ layout_mode = 2
 text = "Publish"
 
 [node name="Log" type="RichTextLabel" parent="Root/Stack/Publish"]
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 bbcode_enabled = true
 text = "[i]Leave fields blank to auto‑generate name, description, thumbnail on publish.[/i]"

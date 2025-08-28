@@ -94,12 +94,15 @@ func _on_publish() -> void:
 	_append_log("Packing project…")
 	var pkg = exporter.pack_zip(Callable(self, "_append_log"))
 	_append_log("Uploading %s…" % pkg)
-	await get_tree().create_timer(0.2).timeout
+	var result = await exporter.upload_zip_with_meta(self, pkg, "ole-luk-oie")
 
-	var link: String = "https://example.invalid/your-project"
-	DisplayServer.clipboard_set(link)
-	_append_log("[color=green]Published[/color] %s (%s). Link copied: %s"
-		% [name if name != "" else "(auto)", ("Public" if is_public else "Private"), link])
+	if !result["success"]:
+		_append_log("[color=red]Failed to publish[/color] %s" % result["error"])
+	else:
+		var link: String = "http://localhost:8080/i?id=" + result["id"]
+		DisplayServer.clipboard_set(link)
+		_append_log("[color=green]Published[/color] %s (%s). Link copied: %s"
+			% [name if name != "" else "(auto)", ("Public" if is_public else "Private"), link])
 	publish_btn.disabled = false
 
 func _append_log(msg: String) -> void:
