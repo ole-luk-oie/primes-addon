@@ -99,7 +99,7 @@ func _on_publish() -> void:
 	if !result["success"]:
 		_append_log("[color=red]Failed to publish[/color] %s" % result["error"])
 	else:
-		var link: String = "http://localhost:8080/i?id=" + result["id"]
+		var link: String = "https://ole-luk-oie.com/primes/i?id=" + result["id"]
 		DisplayServer.clipboard_set(link)
 		_append_log("[color=green]Published[/color] %s (%s). Link copied: %s"
 			% [name if name != "" else "(auto)", ("Public" if is_public else "Private"), link])

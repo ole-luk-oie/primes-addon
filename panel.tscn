@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dbn4peoxs5qjg"]
 
-[ext_resource type="Script" uid="uid://ceajsdsg7vxwb" path="res://addons/primes/panel.gd" id="1_ph1id"]
+[ext_resource type="Script" path="res://addons/primes/panel.gd" id="1_ph1id"]
 
 [node name="CloudPublisherPanel" type="PanelContainer"]
 anchors_preset = 15
@@ -69,8 +69,8 @@ text = "Visibility"
 
 [node name="Visibility" type="OptionButton" parent="Root/Stack/Publish/Grid"]
 layout_mode = 2
-selected = 0
 item_count = 2
+selected = 0
 popup/item_0/text = "Public"
 popup/item_0/id = 0
 popup/item_1/text = "Private"
@@ -92,8 +92,10 @@ text = "Publish"
 [node name="Log" type="RichTextLabel" parent="Root/Stack/Publish"]
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
+focus_mode = 2
 bbcode_enabled = true
 text = "[i]Leave fields blank to auto‑generate name, description, thumbnail on publish.[/i]"
+selection_enabled = true
 
 [node name="SignIn" type="VBoxContainer" parent="Root/Stack"]
 layout_mode = 2

@@ -2,7 +2,7 @@ extends Object
 
 class_name PrimesExporter
 
-const UPLOAD_URL = "http://localhost:8080/upload"
+const UPLOAD_URL = "https://ole-luk-oie.com/primes/upload"
 const PLUGIN_DIR := "res://addons/primes"
 const STUB_NAME := "__primes_stub.gd"
 const ANDROID_PLATFORM_NAME := "Android"
@@ -131,7 +131,7 @@ func upload_zip_with_meta(host: Node, zip_path: String, author: String, is_publi
 	else:
 		return {
 			"success": false,
-			"error": "Upload falied: %s" % result[3].get_string_from_utf8()
+			"error": "Upload falied with result %s, status %s, body %s" % [result[0], result[1], result[3].get_string_from_utf8()]
 		}
 
 func add_part(body: PackedByteArray, boundary: String, name: String, value: String) -> void:
