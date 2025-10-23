@@ -94,7 +94,7 @@ func _on_publish() -> void:
 	_append_log("Packing project…")
 	var pkg = exporter.pack_zip(Callable(self, "_append_log"))
 	_append_log("Uploading %s…" % pkg)
-	var result = await exporter.upload_zip_with_meta(self, pkg, "ole-luk-oie")
+	var result = await exporter.upload_zip_with_meta(self, pkg, "ole-luk-oie", is_public, name, desc)
 
 	if !result["success"]:
 		_append_log("[color=red]Failed to publish[/color] %s" % result["error"])

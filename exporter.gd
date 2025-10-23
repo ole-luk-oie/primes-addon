@@ -98,9 +98,23 @@ func upload_zip_with_meta(host: Node, zip_path: String, author: String, is_publi
 	var body := PackedByteArray()
 
 	var version_info = Engine.get_version_info()
+	var engine = "godot%s_%s" % [version_info["major"], version_info["minor"]]
 
+	var renderer_name : String
+	renderer_name = str(ProjectSettings.get_setting_with_override("rendering/renderer/rendering_method"))
+
+	match renderer_name:
+		"gl_compatibility":
+			engine = "web" + engine
+		"forward_plus":
+			return { "success": false, "error": "Unsupported renderer '%s' please switch to mobile or compatibility" % renderer_name }
+		"mobile":
+			pass
+		_:
+			return { "success": false, "error": "Unsupported renderer '%s' please switch to mobile or compatibility" % renderer_name }
+			
 	add_part(body, boundary, "author", author)
-	add_part(body, boundary, "engine", "godot%s_%s" % [version_info["major"], version_info["minor"]] )
+	add_part(body, boundary, "engine", engine)
 	if not name.is_empty(): add_part(body, boundary, "name", name)
 	if not description.is_empty(): add_part(body, boundary, "description", description)
 
