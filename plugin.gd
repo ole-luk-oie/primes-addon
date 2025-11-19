@@ -19,7 +19,8 @@ func _exit_tree() -> void:
 		panel.queue_free()
 
 # --- Main Screen hooks (this creates the button next to 2D/3D/Script/AssetLib) ---
-func _get_plugin_name() -> String: return "Publish"
+func _get_plugin_name() -> String: return "Primes"
+func _get_plugin_icon() -> Texture2D: return preload("res://addons/primes/icon.svg")
 func _has_main_screen() -> bool: return true
 func _make_visible(visible: bool) -> void:
 	if not is_instance_valid(panel): return
@@ -28,21 +29,15 @@ func _make_visible(visible: bool) -> void:
 		panel.ensure_correct_subview()  # shows Sign-In first if not authenticated
 
 # --- Simple auth persistence ---
-func save_auth(email: String, api_key: String, token: String) -> void:
-	var es := get_editor_interface().get_editor_settings()
-	es.set_setting("cloud_publisher/email", email)
-	es.set_setting("cloud_publisher/api_key", api_key)
-	es.set_setting("cloud_publisher/token", token)
-	es.save()
+func save_token(token: String) -> void:
+	get_editor_interface().get_editor_settings().set_setting("primes/token", token)
 
-func load_auth() -> Dictionary:
+func load_token() -> String:
 	var es := get_editor_interface().get_editor_settings()
-	return {
-		"email":   es.get_setting("cloud_publisher/email"),
-		"api_key": es.get_setting("cloud_publisher/api_key"),
-		"token":   es.get_setting("cloud_publisher/token"),
-	}
+	var v = es.get_setting("primes/token")
+	if v == null:
+		return ""
+	return String(v)
 
-func is_signed_in() -> bool:
-	var a: Dictionary = load_auth()
-	return String(a.get("token", "")) != ""
+func clear_token() -> void:
+	get_editor_interface().get_editor_settings().erase("primes/token")

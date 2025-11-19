@@ -1,134 +1,264 @@
-[gd_scene load_steps=2 format=3 uid="uid://dbn4peoxs5qjg"]
+[gd_scene load_steps=5 format=3 uid="uid://dbn4peoxs5qjg"]
 
-[ext_resource type="Script" path="res://addons/primes/panel.gd" id="1_ph1id"]
+[ext_resource type="Script" uid="uid://ceajsdsg7vxwb" path="res://addons/primes/panel.gd" id="1_ph1id"]
+[ext_resource type="Texture2D" uid="uid://c0iyo4qflv3i4" path="res://addons/primes/person.svg" id="2_person"]
+[ext_resource type="Texture2D" uid="uid://dbh6h6kv4bh1v" path="res://addons/primes/logout.svg" id="3_logout"]
+
+[sub_resource type="StyleBoxEmpty" id="SB_EMPTY"]
 
 [node name="CloudPublisherPanel" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+size_flags_vertical = 3
 script = ExtResource("1_ph1id")
 
 [node name="Root" type="VBoxContainer" parent="."]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
-[node name="Header" type="HBoxContainer" parent="Root"]
-layout_mode = 2
+[node name="EditDialog" type="AcceptDialog" parent="Root"]
+title = "Edit details"
+visible = false
+exclusive = true
+dialog_text = ""
 
-[node name="Title" type="Label" parent="Root/Header"]
+[node name="EditVBox" type="VBoxContainer" parent="Root/EditDialog"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Cloud Publisher"
+theme_override_constants/separation = 8
+custom_minimum_size = Vector2(500, 0)
+
+[node name="NameGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="NameLabel" type="Label" parent="Root/EditDialog/EditVBox/NameGroup"]
+layout_mode = 2
+text = "Name"
+
+[node name="NameEdit" type="LineEdit" parent="Root/EditDialog/EditVBox/NameGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 32
+
+[node name="DescGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DescLabel" type="Label" parent="Root/EditDialog/EditVBox/DescGroup"]
+layout_mode = 2
+text = "Description"
+
+[node name="DescEdit" type="TextEdit" parent="Root/EditDialog/EditVBox/DescGroup"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+wrap_mode = 1
+
 
 [node name="Stack" type="VBoxContainer" parent="Root"]
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="Publish" type="VBoxContainer" parent="Root/Stack"]
 visible = false
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
-[node name="Grid" type="GridContainer" parent="Root/Stack/Publish"]
+[node name="AuthorRow" type="HBoxContainer" parent="Root/Stack/Publish"]
 layout_mode = 2
-columns = 2
 
-[node name="L1" type="Label" parent="Root/Stack/Publish/Grid"]
+[node name="AuthorIcon" type="TextureRect" parent="Root/Stack/Publish/AuthorRow"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("2_person")
+stretch_mode = 4
+
+[node name="AuthorValue" type="RichTextLabel" parent="Root/Stack/Publish/AuthorRow"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/focus = SubResource("SB_EMPTY")
+theme_override_styles/normal = SubResource("SB_EMPTY")
+bbcode_enabled = true
+text = "[font_size=18][b]ole-luk-oie[/b]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="LogoutBtn" type="Button" parent="Root/Stack/Publish/AuthorRow"]
+modulate = Color(1, 1, 1, 0.8)
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/hover = SubResource("SB_EMPTY")
+theme_override_styles/pressed = SubResource("SB_EMPTY")
+theme_override_styles/normal = SubResource("SB_EMPTY")
+icon = ExtResource("3_logout")
+flat = true
+
+[node name="PublishedScroll" type="ScrollContainer" parent="Root/Stack/Publish"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="PublishedList" type="VBoxContainer" parent="Root/Stack/Publish/PublishedScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_constants/separation = 4
+
+[node name="DividerContainer" type="MarginContainer" parent="Root/Stack/Publish"]
+layout_mode = 2
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 0
+
+[node name="Spacer" type="Control" parent="Root/Stack/Publish/DividerContainer"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="DividerRow" type="HBoxContainer" parent="Root/Stack/Publish/DividerContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LeftLine" type="HSeparator" parent="Root/Stack/Publish/DividerContainer/DividerRow"]
+custom_minimum_size = Vector2(155, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="DividerLabel" type="Label" parent="Root/Stack/Publish/DividerContainer/DividerRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Publish current project"
+vertical_alignment = 1
+
+[node name="RightLine" type="HSeparator" parent="Root/Stack/Publish/DividerContainer/DividerRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Form" type="VBoxContainer" parent="Root/Stack/Publish"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CenterRow" type="HBoxContainer" parent="Root/Stack/Publish/Form"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FormInner" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="NameGroup" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="NameLabel" type="Label" parent="Root/Stack/Publish/Form/CenterRow/FormInner/NameGroup"]
 layout_mode = 2
 text = "Name (optional)"
 
-[node name="Name" type="LineEdit" parent="Root/Stack/Publish/Grid"]
+[node name="Name" type="LineEdit" parent="Root/Stack/Publish/Form/CenterRow/FormInner/NameGroup"]
 layout_mode = 2
-placeholder_text = "Leave blank to auto‑generate"
+size_flags_horizontal = 3
+placeholder_text = "If left blank the sequence number will be used (e.g. “#7”)"
+max_length = 36
 
-[node name="L2" type="Label" parent="Root/Stack/Publish/Grid"]
+[node name="DescGroup" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DescLabel" type="Label" parent="Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup"]
 layout_mode = 2
 text = "Description (optional)"
 
-[node name="Desc" type="TextEdit" parent="Root/Stack/Publish/Grid"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="L3" type="Label" parent="Root/Stack/Publish/Grid"]
-layout_mode = 2
-text = "Thumbnail (optional)"
-
-[node name="ThumbRow" type="HBoxContainer" parent="Root/Stack/Publish/Grid"]
-layout_mode = 2
-
-[node name="ThumbPath" type="LineEdit" parent="Root/Stack/Publish/Grid/ThumbRow"]
+[node name="Desc" type="TextEdit" parent="Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup"]
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "No file selected"
-editable = false
+size_flags_vertical = 0
+wrap_mode = 1
 
-[node name="Browse" type="Button" parent="Root/Stack/Publish/Grid/ThumbRow"]
+[node name="SpacerTop" type="Control" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
+custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-text = "Select…"
 
-[node name="L4" type="Label" parent="Root/Stack/Publish/Grid"]
+[node name="ActionArea" type="HBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
 layout_mode = 2
-text = "Visibility"
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
 
-[node name="Visibility" type="OptionButton" parent="Root/Stack/Publish/Grid"]
-layout_mode = 2
-item_count = 2
-selected = 0
-popup/item_0/text = "Public"
-popup/item_0/id = 0
-popup/item_1/text = "Private"
-popup/item_1/id = 1
-
-[node name="Grow" type="Control" parent="Root/Stack/Publish"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Row" type="HBoxContainer" parent="Root/Stack/Publish"]
-layout_mode = 2
-alignment = 2
-
-[node name="PublishBtn" type="Button" parent="Root/Stack/Publish/Row"]
+[node name="PublishBtn" type="Button" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Publish"
 
-[node name="Log" type="RichTextLabel" parent="Root/Stack/Publish"]
-custom_minimum_size = Vector2(0, 200)
+[node name="HideFromFeed" type="CheckBox" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
 layout_mode = 2
-focus_mode = 2
-bbcode_enabled = true
-text = "[i]Leave fields blank to auto‑generate name, description, thumbnail on publish.[/i]"
-selection_enabled = true
+size_flags_horizontal = 0
+tooltip_text = "If checked, your project won't appear in users' feeds. It can only be opened by a direct link."
+text = "Hide from feed"
 
-[node name="SignIn" type="VBoxContainer" parent="Root/Stack"]
+[node name="SpacerBottom" type="Control" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="EmailL" type="Label" parent="Root/Stack/SignIn"]
+[node name="SignInWrapper" type="Control" parent="Root/Stack"]
 layout_mode = 2
-text = "Email"
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="Email" type="LineEdit" parent="Root/Stack/SignIn"]
+[node name="SignIn" type="VBoxContainer" parent="Root/Stack/SignInWrapper"]
 layout_mode = 2
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -125.0
+offset_top = -60.0
+offset_right = 125.0
+offset_bottom = 60.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+alignment = 1
+
+[node name="EmailL" type="Label" parent="Root/Stack/SignInWrapper/SignIn"]
+layout_mode = 2
+text = "Enter email:"
+
+[node name="Email" type="LineEdit" parent="Root/Stack/SignInWrapper/SignIn"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 4
 placeholder_text = "you@example.com"
 
-[node name="KeyL" type="Label" parent="Root/Stack/SignIn"]
+[node name="EmailSpacer" type="Control" parent="Root/Stack/SignInWrapper/SignIn"]
+custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
-text = "API Key"
 
-[node name="Key" type="LineEdit" parent="Root/Stack/SignIn"]
-layout_mode = 2
-placeholder_text = "••••••••••••"
-secret = true
-
-[node name="SignInRow" type="HBoxContainer" parent="Root/Stack/SignIn"]
+[node name="SignInRow" type="HBoxContainer" parent="Root/Stack/SignInWrapper/SignIn"]
 layout_mode = 2
 alignment = 2
 
-[node name="SignInBtn" type="Button" parent="Root/Stack/SignIn/SignInRow"]
+[node name="SignInBtn" type="Button" parent="Root/Stack/SignInWrapper/SignIn/SignInRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Sign In"
 
-[node name="FileDialog" type="FileDialog" parent="."]
-title = "Open a File"
-ok_button_text = "Open"
-file_mode = 0
-access = 2
-filters = PackedStringArray("*.png ; PNG Images", "*.jpg ; JPEG Images", "*.jpeg ; JPEG Images")
+[node name="Log" type="RichTextLabel" parent="Root"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 2
+bbcode_enabled = true
+text = "[i]Logs will appear here...[/i]"
+autowrap_mode = 2
+selection_enabled = true
