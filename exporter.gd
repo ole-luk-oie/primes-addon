@@ -43,22 +43,12 @@ func set_prime_visibility(host: Node, token: String, prime_id: String, is_public
 func update_prime_meta(host: Node, token: String, prime_id: String, name: String, description: String) -> Dictionary:
 	return await _user_api.update_prime_meta(host, token, prime_id, name, description)
 
-# === Publishing ===
-func pack_and_upload(host: Node, token: String, author: String, is_public: bool, 
+func pack_zip() -> Dictionary:
+	return _packager.pack_zip()
+	
+func upload_zip(host: Node, zip_path: String, token: String, is_public: bool, 
 		name: String, description: String) -> Dictionary:
-	# Pack
-	var pack_result := _packager.pack_zip()
-	if not pack_result.get("success", false):
-		return pack_result
-	
-	var zip_path: String = pack_result.get("zip_path", "")
-	
-	# Upload
-	var upload_result := await _uploader.upload_zip(
-		host, token, zip_path, author, is_public, name, description
-	)
-	
-	# Cleanup
+	return await _uploader.upload_zip(host, token, zip_path, is_public, name, description)
+
+func cleanup_temp(zip_path: String):
 	_packager.cleanup_temp(zip_path)
-	
-	return upload_result

@@ -3,7 +3,7 @@ extends PanelContainer
 class_name CloudPublisherPanel
 
 var plugin: EditorPlugin
-var exporter: PrimesExporter
+var exporter: PrimesExporter = PrimesExporter.new()
 
 # UI Components
 @onready var stack: VBoxContainer = $Root/Stack
@@ -90,11 +90,11 @@ func _on_logout() -> void:
 func _on_copy_link(prime_id: String) -> void:
 	var link := "https://ole-luk-oie.com/primes/i?id=" + prime_id
 	DisplayServer.clipboard_set(link)
-	await logs.append_log("[i]Link copied:[/i] " + link)
+	await logs.append_log("[i]Link copied to the clipboard:[/i] " + link)
 
 func _on_toggle_visibility(prime_id: String, current_is_public: bool) -> void:
 	if _token.is_empty():
-		await logs.append_log("[color=orange]Please sign in again (missing token).[/color]")
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]")
 		return
 	
 	var new_is_public := not current_is_public
@@ -115,7 +115,7 @@ func _on_toggle_visibility(prime_id: String, current_is_public: bool) -> void:
 	
 	published_list.update_visibility_state(prime_id, new_is_public)
 	await logs.append_log(
-		"[i]Toggled visibility for %s → %s[/i]"
+		"Toggled visibility for %s → %s"
 		% [prime_id, "public" if new_is_public else "hidden"]
 	)
 
@@ -144,42 +144,6 @@ func _on_update_prime_meta(prime_id: String, name: String, description: String) 
 	
 	await logs.append_log("[color=green]Updated meta for %s[/color]" % prime_id)
 	edit_dialog.hide()
-	
-	await _update_primes()
-
-# === Publish Handlers ===
-func _on_publish(name: String, description: String, hide_from_feed: bool) -> void:
-	_remember_recovery_lock_state()
-	
-	var is_public: bool = not hide_from_feed
-	
-	publish_form.set_enabled(false)
-	
-	await logs.append_log("Packing project…")
-	
-	var result := await exporter.pack_and_upload(
-		self,
-		_token,
-		"ole-luk-oie",
-		is_public,
-		name,
-		description
-	)
-	
-	if not result.get("success", false):
-		await logs.append_log("[color=red]Failed to publish:[/color] %s" % String(result.get("error", "")))
-	else:
-		var link: String = "https://ole-luk-oie.com/primes/i?id=" + String(result["id"])
-		DisplayServer.clipboard_set(link)
-		await logs.append_log(
-			"[color=green]Published[/color] %s. Link copied: %s"
-			% [("Public" if is_public else "Unlisted"), link]
-		)
-		publish_form.clear_form()
-	
-	publish_form.set_enabled(true)
-	
-	_clear_recovery_lock_if_new()
 	
 	await _update_primes()
 
@@ -213,12 +177,76 @@ func _update_primes() -> bool:
 			await logs.append_log("[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]")
 		return true
 
+# === Publish Handlers ===
+func _on_publish(name: String, description: String, hide_from_feed: bool) -> void:
+	_remember_recovery_lock_state()
+	
+	var is_public: bool = not hide_from_feed
+	
+	publish_form.set_enabled(false)
+	
+	var result := await pack_and_upload(
+		self,
+		_token,
+		is_public,
+		name,
+		description
+	)
+	
+	if not result.get("success", false):
+		await logs.append_log("[color=red]Failed to publish:[/color] %s" % String(result.get("error", "")))
+	else:
+		var link: String = "https://ole-luk-oie.com/primes/i?id=" + String(result["id"])
+		DisplayServer.clipboard_set(link)
+		await logs.append_log(
+			"[color=green]Published[/color] %s. Link copied: %s"
+			% [("Public" if is_public else "Unlisted"), link]
+		)
+		publish_form.clear_form()
+	
+	publish_form.set_enabled(true)
+	
+	_clear_recovery_lock_if_new()
+	
+	await _update_primes()
+
+func pack_and_upload(host: Node, token: String, is_public: bool, 
+		name: String, description: String) -> Dictionary:
+	
+	await logs.append_log("Packing project...")
+
+	# Pack
+	var pack_result := exporter.pack_zip()
+	if not pack_result.get("success", false):
+		await logs.append_log("[color=red]Failed to build package:[/color] %s" % String(pack_result.get("error", "")))
+		return pack_result
+	
+	var zip_path: String = pack_result.get("zip_path", "")
+	
+	await logs.append_log("Uploading...")
+
+	# Upload
+	var upload_result := await exporter.upload_zip(
+		host, token, zip_path, is_public, name, description
+	)
+	
+	await logs.append_log("Cleaning up...")
+
+	# Cleanup
+	exporter.cleanup_temp(zip_path)
+	
+	return upload_result
+
 # === Recovery Lock Management ===
 func _remember_recovery_lock_state() -> void:
 	_rec_lock_preexisting = FileAccess.file_exists(_rec_lock_path)
+	#if _rec_lock_preexisting:
+		#await logs.append_log("[i]Editor recovery lock is set. [/i]")
+	#else:
+		#await logs.append_log("[i]No editor recovery lock.[/i]")
 
 func _clear_recovery_lock_if_new() -> void:
 	if not _rec_lock_preexisting and FileAccess.file_exists(_rec_lock_path):
 		var err := DirAccess.remove_absolute(_rec_lock_path)
-		if err == OK:
-			await logs.append_log("[i]Cleared editor recovery lock.[/i]")
+		#if err == OK:
+			#await logs.append_log("[i]Cleared editor recovery lock.[/i]")

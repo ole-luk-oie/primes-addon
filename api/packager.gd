@@ -3,7 +3,7 @@ class_name Packager
 
 const PLUGIN_DIR = "res://addons/primes"
 const STUB_NAME = "__primes_stub.gd"
-const ACCEPTED_PLATFORMS = ["Android", "Web"]
+const EXPORT_PRESET_PLATFORM = "Web"
 
 var TMP_ROOT = OS.get_user_data_dir() + "/primes_export_tmp"
 
@@ -12,7 +12,7 @@ func pack_zip() -> Dictionary:
 	if preset_name.is_empty():
 		return {
 			"success": false,
-			"error": "No Android/Web export preset found"
+			"error": "No Web export preset found"
 		}
 	
 	var exe := OS.get_executable_path()
@@ -58,17 +58,9 @@ func _get_pack_preset() -> String:
 		if section.begins_with("preset."):
 			var preset_name := str(export_presets.get_value(section, "name", ""))
 			var platform := str(export_presets.get_value(section, "platform", ""))
-			if ACCEPTED_PLATFORMS.has(platform):
-				if platform == "Android":
-					android_candidate = preset_name
-				elif platform == "Web":
-					web_candidate = preset_name
-	
-	# Prefer Android, else Web
-	if android_candidate != "":
-		return android_candidate
-	if web_candidate != "":
-		return web_candidate
+			if EXPORT_PRESET_PLATFORM == platform:
+				return preset_name
+
 	return ""
 
 func _make_temp_copy(src_proj_abs: String) -> String:

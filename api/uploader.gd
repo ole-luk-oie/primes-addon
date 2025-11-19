@@ -4,7 +4,7 @@ class_name Uploader
 const BASE_URL = "https://ole-luk-oie.com/primes"
 const UPLOAD_URL = BASE_URL + "/dev/upload"
 
-func upload_zip(host: Node, token: String, zip_path: String, author: String, 
+func upload_zip(host: Node, token: String, zip_path: String,
 		is_public := false, name := "", description := "") -> Dictionary:
 	var f := FileAccess.open(zip_path, FileAccess.READ)
 	if f == null:
@@ -22,7 +22,7 @@ func upload_zip(host: Node, token: String, zip_path: String, author: String,
 	var boundary := "----GodotBoundary" + str(Time.get_unix_time_from_system())
 	var body := PackedByteArray()
 	
-	_add_part(body, boundary, "author", author)
+	#_add_part(body, boundary, "author", author)
 	_add_part(body, boundary, "engine", engine_result.engine)
 	if not name.is_empty():
 		_add_part(body, boundary, "name", name)
