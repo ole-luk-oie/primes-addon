@@ -1,8 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://dbn4peoxs5qjg"]
+[gd_scene load_steps=11 format=3 uid="uid://dbn4peoxs5qjg"]
 
 [ext_resource type="Script" uid="uid://ceajsdsg7vxwb" path="res://addons/primes/panel.gd" id="1_ph1id"]
-[ext_resource type="Texture2D" uid="uid://c0iyo4qflv3i4" path="res://addons/primes/person.svg" id="2_person"]
-[ext_resource type="Texture2D" uid="uid://dbh6h6kv4bh1v" path="res://addons/primes/logout.svg" id="3_logout"]
+[ext_resource type="Texture2D" uid="uid://c0iyo4qflv3i4" path="res://addons/primes/drawables/person.svg" id="2_person"]
+[ext_resource type="Texture2D" uid="uid://dbh6h6kv4bh1v" path="res://addons/primes/drawables/logout.svg" id="3_logout"]
+
+[ext_resource type="Script" path="res://addons/primes/ui/author_section.gd" id="4_author"]
+[ext_resource type="Script" path="res://addons/primes/ui/published_list.gd" id="5_published_list"]
+[ext_resource type="Script" path="res://addons/primes/ui/publish_form.gd" id="6_publish_form"]
+[ext_resource type="Script" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
+[ext_resource type="Script" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
+[ext_resource type="Script" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
 
 [sub_resource type="StyleBoxEmpty" id="SB_EMPTY"]
 
@@ -23,6 +30,7 @@ title = "Edit details"
 visible = false
 exclusive = true
 dialog_text = ""
+script = ExtResource("9_edit")
 
 [node name="EditVBox" type="VBoxContainer" parent="Root/EditDialog"]
 layout_mode = 2
@@ -69,6 +77,7 @@ theme_override_constants/separation = 8
 
 [node name="AuthorRow" type="HBoxContainer" parent="Root/Stack/Publish"]
 layout_mode = 2
+script = ExtResource("4_author")
 
 [node name="AuthorIcon" type="TextureRect" parent="Root/Stack/Publish/AuthorRow"]
 custom_minimum_size = Vector2(16, 16)
@@ -107,8 +116,9 @@ custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+script = ExtResource("5_published_list")
 
-[node name="PublishedList" type="VBoxContainer" parent="Root/Stack/Publish/PublishedScroll"]
+[node name="PublishedListContainer" type="VBoxContainer" parent="Root/Stack/Publish/PublishedScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
@@ -146,6 +156,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
+script = ExtResource("6_publish_form")
 
 [node name="CenterRow" type="HBoxContainer" parent="Root/Stack/Publish/Form"]
 layout_mode = 2
@@ -228,6 +239,7 @@ offset_bottom = 60.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 alignment = 1
+script = ExtResource("8_sign_in")
 
 [node name="EmailL" type="Label" parent="Root/Stack/SignInWrapper/SignIn"]
 layout_mode = 2
@@ -262,3 +274,4 @@ bbcode_enabled = true
 text = "[i]Logs will appear here...[/i]"
 autowrap_mode = 2
 selection_enabled = true
+script = ExtResource("7_logs")
