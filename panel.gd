@@ -62,8 +62,6 @@ func _clear_recovery_lock_if_new() -> void:
 
 func _ready() -> void:
 	
-	print("_ready")
-	
 	var theme := EditorInterface.get_editor_theme()
 
 	ROW_BG_DARK = StyleBoxFlat.new()
