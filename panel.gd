@@ -84,20 +84,24 @@ func _on_logout() -> void:
 	if plugin:
 		plugin.clear_token()
 	
+	await logs.append_log("Signed out")
+	
 	_show_sign_in()
 
 # === Published List Handlers ===
 func _on_copy_link(prime_id: String) -> void:
 	var link := "https://ole-luk-oie.com/primes/i?id=" + prime_id
 	DisplayServer.clipboard_set(link)
-	await logs.append_log("[i]Link copied to the clipboard:[/i] " + link)
+	await logs.append_log("Link copied to the clipboard: [b]" + link + "[/b]")
 
-func _on_toggle_visibility(prime_id: String, current_is_public: bool) -> void:
+func _on_toggle_visibility(prime_id: String, name: String, current_is_public: bool) -> void:
 	if _token.is_empty():
-		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]")
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
 		return
 	
 	var new_is_public := not current_is_public
+	
+	await logs.append_log("Updating visibility for [b]%s[/b]" % [name])
 	
 	var res: Dictionary = await exporter.set_prime_visibility(
 		self,
@@ -108,25 +112,27 @@ func _on_toggle_visibility(prime_id: String, current_is_public: bool) -> void:
 	
 	if not res.get("success", false):
 		await logs.append_log(
-			"[color=red]Failed to update visibility for %s:[/color] %s"
-			% [prime_id, String(res.get("error", "unknown"))]
+			"[color=red]Failed to update visibility for[/color] [b]%s[/b]: %s"
+			% [name, String(res.get("error", "unknown"))]
 		)
 		return
 	
 	published_list.update_visibility_state(prime_id, new_is_public)
 	await logs.append_log(
-		"Toggled visibility for %s → %s"
-		% [prime_id, "public" if new_is_public else "hidden"]
+		"Toggled visibility for [b]%s[/b] → %s"
+		% [name, "public" if new_is_public else "hidden"]
 	)
 
 func _on_edit_prime(prime_id: String, name: String, description: String) -> void:
 	edit_dialog.show_edit_dialog(prime_id, name, description)
 
-func _on_update_prime_meta(prime_id: String, name: String, description: String) -> void:
+func _on_update_prime_meta(prime_id: String, prev_name: String, name: String, description: String) -> void:
 	if _token.is_empty():
-		await logs.append_log("[color=red]Cannot edit: missing auth token.[/color]")
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
 		return
 	
+	await logs.append_log("Updating meta for [b]%s[/b]" % [prev_name])
+
 	var res := await exporter.update_prime_meta(
 		self,
 		_token,
@@ -137,12 +143,12 @@ func _on_update_prime_meta(prime_id: String, name: String, description: String) 
 	
 	if not res.get("success", false):
 		await logs.append_log(
-			"[color=red]Update failed for %s:[/color] %s"
-			% [prime_id, String(res.get("error", "unknown"))]
+			"[color=red]Update failed for[/color] [b]%s[/b]: %s"
+			% [prev_name, String(res.get("error", "unknown"))], "red"
 		)
 		return
 	
-	await logs.append_log("[color=green]Updated meta for %s[/color]" % prime_id)
+	await logs.append_log("Meta for [b]%s[/b] succefully updated" % prev_name)
 	edit_dialog.hide()
 	
 	await _update_primes()
@@ -168,13 +174,13 @@ func _update_primes() -> bool:
 	else:
 		var error = String(info.get("error", ""))
 		if error == "token_expired":
-			await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]")
+			await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
 			_token = ""
 			plugin.clear_token()
 			_show_sign_in()
 			return false
 		else:
-			await logs.append_log("[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]")
+			await logs.append_log("[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]", "orange")
 		return true
 
 # === Publish Handlers ===
@@ -194,7 +200,7 @@ func _on_publish(name: String, description: String, hide_from_feed: bool) -> voi
 	)
 	
 	if not result.get("success", false):
-		await logs.append_log("[color=red]Failed to publish:[/color] %s" % String(result.get("error", "")))
+		await logs.append_log("[color=red]Failed to publish:[/color] %s" % String(result.get("error", "")), "red")
 	else:
 		var link: String = "https://ole-luk-oie.com/primes/i?id=" + String(result["id"])
 		DisplayServer.clipboard_set(link)
@@ -218,7 +224,7 @@ func pack_and_upload(host: Node, token: String, is_public: bool,
 	# Pack
 	var pack_result := exporter.pack_zip()
 	if not pack_result.get("success", false):
-		await logs.append_log("[color=red]Failed to build package:[/color] %s" % String(pack_result.get("error", "")))
+		await logs.append_log("[color=red]Failed to build package:[/color] %s" % String(pack_result.get("error", "")), "red")
 		return pack_result
 	
 	var zip_path: String = pack_result.get("zip_path", "")

@@ -2,7 +2,7 @@
 extends AcceptDialog
 class_name EditPrimeDialog
 
-signal update_requested(prime_id: String, name: String, description: String)
+signal update_requested(prime_id: String, prev_name: String, name: String, description: String)
 
 const DESC_MAX := 255
 
@@ -10,6 +10,7 @@ const DESC_MAX := 255
 @onready var edit_desc_te: TextEdit = $EditVBox/DescGroup/DescEdit
 
 var _editing_prime_id: String = ""
+var _prev_name = ""
 
 func _ready() -> void:
 	var ok_btn = get_ok_button()
@@ -25,6 +26,8 @@ func show_edit_dialog(prime_id: String, name: String, description: String) -> vo
 	edit_name_le.text = name
 	edit_desc_te.text = description
 	
+	_prev_name = name
+	
 	popup_centered()
 	edit_name_le.grab_focus()
 
@@ -35,7 +38,7 @@ func _on_confirmed() -> void:
 	var new_name := edit_name_le.text.strip_edges()
 	var new_desc := edit_desc_te.text.strip_edges()
 	
-	update_requested.emit(_editing_prime_id, new_name, new_desc)
+	update_requested.emit(_editing_prime_id, _prev_name, new_name, new_desc)
 
 func _on_edit_desc_changed() -> void:
 	var t := edit_desc_te.text

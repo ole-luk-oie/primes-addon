@@ -3,8 +3,8 @@ extends ScrollContainer
 class_name PublishedList
 
 signal copy_link_requested(prime_id: String)
-signal toggle_visibility_requested(prime_id: String, is_public: bool)
-signal edit_prime_requested(prime_id: String, name: String, description: String)
+signal toggle_visibility_requested(prime_id: String, name: String, is_public: bool)
+signal edit_prime_requested(prime_id: String, prev_name: String, name: String, description: String)
 
 @onready var list_container: VBoxContainer = $PublishedListContainer
 
@@ -94,7 +94,7 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	var link_btn := _create_link_button(prime_id)
 	
 	# Visibility toggle button
-	var vis_btn := _create_visibility_button(prime_id, is_public)
+	var vis_btn := _create_visibility_button(prime_id, name, is_public)
 	
 	# Edit button
 	var edit_btn := _create_edit_button(prime_id, name, desc)
@@ -139,15 +139,18 @@ func _create_link_button(prime_id: String) -> Button:
 	
 	return btn
 
-func _create_visibility_button(prime_id: String, is_public: bool) -> Button:
+func _create_visibility_button(prime_id: String, name: String, is_public: bool) -> Button:
 	var btn := Button.new()
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.set_meta("prime_id", prime_id)
+	btn.set_meta("name", name)
 	btn.set_meta("is_public", is_public)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_update_visibility_icon(btn, is_public)
-	btn.pressed.connect(func(): toggle_visibility_requested.emit(prime_id, btn.get_meta("is_public")))
+	btn.pressed.connect(func():
+		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		toggle_visibility_requested.emit(prime_id, btn.get_meta("name"), btn.get_meta("is_public")))
 	
 	return btn
 
@@ -177,6 +180,7 @@ func update_visibility_state(prime_id: String, is_public: bool) -> void:
 		for child in row.get_children():
 			if child is Button and child.has_meta("prime_id"):
 				if child.get_meta("prime_id") == prime_id and child.has_meta("is_public"):
+					child.mouse_filter = Control.MOUSE_FILTER_STOP
 					child.set_meta("is_public", is_public)
 					_update_visibility_icon(child, is_public)
 					return

@@ -46,7 +46,7 @@ func update_prime_meta(host: Node, token: String, prime_id: String, name: String
 func pack_zip() -> Dictionary:
 	return _packager.pack_zip()
 	
-func upload_zip(host: Node, zip_path: String, token: String, is_public: bool, 
+func upload_zip(host: Node, token: String, zip_path: String, is_public: bool, 
 		name: String, description: String) -> Dictionary:
 	return await _uploader.upload_zip(host, token, zip_path, is_public, name, description)
 

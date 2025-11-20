@@ -71,14 +71,14 @@ func _handle_email_step() -> void:
 		sign_in_btn.disabled = false
 		await _logs.append_log(
 			"[color=red]Auth start failed:[/color] %s"
-			% String(start_res.get("error", "unknown"))
+			% String(start_res.get("error", "unknown")), "red"
 		)
 		return
 	
 	_session_id = int(start_res.get("session_id", -1))
 	if _session_id <= 0:
 		sign_in_btn.disabled = false
-		await _logs.append_log("[color=red]Invalid session id returned.[/color]")
+		await _logs.append_log("[color=red]Invalid session id returned.[/color]", "red")
 		return
 	
 	_auth_step = AUTH_STEP_CODE
@@ -104,7 +104,7 @@ func _handle_code_step() -> void:
 		sign_in_btn.disabled = false
 		await _logs.append_log(
 			"[color=red]Code verification failed:[/color] %s"
-			% String(verify_res.get("error", "unknown"))
+			% String(verify_res.get("error", "unknown")), "red"
 		)
 		return
 	
@@ -118,14 +118,14 @@ func _handle_code_step() -> void:
 	
 	if _user_id <= 0:
 		sign_in_btn.disabled = false
-		await _logs.append_log("[color=red]Verify: invalid user_id.[/color]")
+		await _logs.append_log("[color=red]Verify: invalid user_id.[/color]", "red")
 		return
 	if _token.is_empty():
 		sign_in_btn.disabled = false
-		await _logs.append_log("[color=red]Verify: missing token.[/color]")
+		await _logs.append_log("[color=red]Verify: missing token.[/color]", "red")
 		return
 	
-	await _logs.append_log("[color=green]Code accepted.[/color] username=%s" % _username)
+	await _logs.append_log("[color=green]Code accepted[/color]")
 	
 	if not needs_username:
 		_finish_sign_in()
@@ -152,12 +152,12 @@ func _handle_username_step() -> void:
 		sign_in_btn.disabled = false
 		await _logs.append_log(
 			"[color=red]Username claim failed:[/color] %s"
-			% String(uname_res.get("error", "unknown"))
+			% String(uname_res.get("error", "unknown")), "red"
 		)
 		return
 	
 	_username = username
-	await _logs.append_log("[color=green]Username set:[/color] %s" % _username)
+	await _logs.append_log("[color=green]Username set:[/color] [b]%s[/b]" % _username)
 	
 	_finish_sign_in()
 	sign_in_btn.disabled = false
@@ -167,6 +167,6 @@ func _finish_sign_in() -> void:
 	if display_name == "":
 		display_name = "(unknown)"
 	
-	await _logs.append_log("[color=green]Signed in as %s[/color]" % display_name)
+	await _logs.append_log("Signed in as [b]%s[/b]" % display_name)
 	
 	sign_in_completed.emit(_token, _username)
