@@ -11,6 +11,7 @@ const AUTH_STEP_USERNAME := 2
 @onready var sign_label: Label = $EmailL
 @onready var email_le: LineEdit = $Email
 @onready var sign_in_btn: Button = $SignInRow/SignInBtn
+@onready var back_btn: Button = $SignInRow/BackBtn
 
 var _auth_step: int = AUTH_STEP_EMAIL
 var _current_email: String = ""
@@ -28,6 +29,7 @@ func setup(exporter: PrimesExporter, logs: LogsArea) -> void:
 
 func _ready() -> void:
 	sign_in_btn.pressed.connect(_on_sign_in)
+	back_btn.pressed.connect(_on_back)
 	reset()
 
 func reset() -> void:
@@ -43,6 +45,7 @@ func reset() -> void:
 	email_le.text = ""
 	sign_in_btn.text = "Send code"
 	sign_in_btn.disabled = false
+	back_btn.visible = false
 	
 	email_le.grab_focus()
 
@@ -63,7 +66,7 @@ func _handle_email_step() -> void:
 	_current_email = email
 	sign_in_btn.disabled = true
 	
-	await _logs.append_log("Starting email sign-in…")
+	await _logs.append_log("Starting email sign-in...")
 	
 	var start_res: Dictionary = await _exporter.start_email_sign_in(self, email)
 	
@@ -87,6 +90,7 @@ func _handle_email_step() -> void:
 	email_le.placeholder_text = ""
 	sign_in_btn.text = "Verify"
 	sign_in_btn.disabled = false
+	back_btn.visible = true
 	
 	await _logs.append_log("Verification code sent to [b]%s[/b]. Please check your inbox." % _current_email)
 	email_le.grab_focus()
@@ -99,6 +103,9 @@ func _handle_code_step() -> void:
 	sign_in_btn.disabled = true
 	
 	var verify_res: Dictionary = await _exporter.verify_email_code(self, _session_id, code)
+	
+	if _auth_step != AUTH_STEP_CODE:
+		return
 	
 	if not verify_res.get("success", false):
 		sign_in_btn.disabled = false
@@ -129,7 +136,6 @@ func _handle_code_step() -> void:
 	
 	if not needs_username:
 		_finish_sign_in()
-		sign_in_btn.disabled = false
 	else:
 		_auth_step = AUTH_STEP_USERNAME
 		sign_label.text = "Choose a username:"
@@ -137,6 +143,7 @@ func _handle_code_step() -> void:
 		email_le.placeholder_text = "my_cool_name"
 		sign_in_btn.text = "Set username"
 		sign_in_btn.disabled = false
+		back_btn.visible = true
 		email_le.grab_focus()
 
 func _handle_username_step() -> void:
@@ -147,6 +154,9 @@ func _handle_username_step() -> void:
 	sign_in_btn.disabled = true
 	
 	var uname_res: Dictionary = await _exporter.claim_username(self, _user_id, username)
+	
+	if _auth_step != AUTH_STEP_USERNAME:
+		return
 	
 	if not uname_res.get("success", false):
 		sign_in_btn.disabled = false
@@ -160,7 +170,14 @@ func _handle_username_step() -> void:
 	await _logs.append_log("[color=green]Username set:[/color] [b]%s[/b]" % _username)
 	
 	_finish_sign_in()
-	sign_in_btn.disabled = false
+
+func _on_back() -> void:
+	if _auth_step == AUTH_STEP_EMAIL:
+		return  # already at first stage; nothing to do
+	
+	reset()
+	await _logs.append_log("Sign-in flow restarted")
+
 
 func _finish_sign_in() -> void:
 	var display_name := (_username if _username != "" else _current_email)

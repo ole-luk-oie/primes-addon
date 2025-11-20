@@ -26,7 +26,7 @@ func _make_visible(visible: bool) -> void:
 	if not is_instance_valid(panel): return
 	panel.visible = visible
 	if visible:
-		panel.ensure_correct_subview()  # shows Sign-In first if not authenticated
+		panel.ensure_correct_subview()
 
 # --- Simple auth persistence ---
 func save_token(token: String) -> void:

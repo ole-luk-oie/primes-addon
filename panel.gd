@@ -15,6 +15,7 @@ var exporter: PrimesExporter = PrimesExporter.new()
 @onready var publish_form: PublishForm = $Root/Stack/Publish/Form
 @onready var logs: LogsArea = $Root/Log
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
+@onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
 
 # State
 var _token: String = ""
@@ -23,6 +24,8 @@ var _username: String = ""
 # Recovery lock handling
 var _rec_lock_path := OS.get_user_data_dir().path_join(".recovery_mode_lock")
 var _rec_lock_preexisting := false
+
+var _initialized = false
 
 func _ready() -> void:
 	# Setup component dependencies
@@ -42,24 +45,34 @@ func _ready() -> void:
 	
 	# Initialize view
 	ensure_correct_subview()
-
-func ensure_correct_subview() -> void:
+	
+func ensure_correct_subview():
 	if plugin:
 		var token := String(plugin.load_token())
 		if token and token != "":
 			_token = token
+			if not _initialized:
+				_show_initializing()
 			if await _update_primes():
 				_show_publish()
+				_initialized = true
 				return
 	
 	_show_sign_in()
 
+func _show_initializing() -> void:
+	initializing_wrapper.visible = true
+	publish_vb.visible = false
+	sign_in_wrapper.visible = false
+
 func _show_sign_in() -> void:
+	initializing_wrapper.visible = false
 	publish_vb.visible = false
 	sign_in_wrapper.visible = true
 	sign_in_view.reset()
 
 func _show_publish() -> void:
+	initializing_wrapper.visible = false
 	sign_in_wrapper.visible = false
 	publish_vb.visible = true
 

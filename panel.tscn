@@ -1,15 +1,14 @@
 [gd_scene load_steps=11 format=3 uid="uid://dbn4peoxs5qjg"]
 
-[ext_resource type="Script" uid="uid://ceajsdsg7vxwb" path="res://addons/primes/panel.gd" id="1_ph1id"]
-[ext_resource type="Texture2D" uid="uid://c0iyo4qflv3i4" path="res://addons/primes/drawables/person.svg" id="2_person"]
-[ext_resource type="Texture2D" uid="uid://dbh6h6kv4bh1v" path="res://addons/primes/drawables/logout.svg" id="3_logout"]
-
-[ext_resource type="Script" path="res://addons/primes/ui/author_section.gd" id="4_author"]
-[ext_resource type="Script" path="res://addons/primes/ui/published_list.gd" id="5_published_list"]
-[ext_resource type="Script" path="res://addons/primes/ui/publish_form.gd" id="6_publish_form"]
-[ext_resource type="Script" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
-[ext_resource type="Script" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
-[ext_resource type="Script" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
+[ext_resource type="Script" uid="uid://b7xe5agcja04x" path="res://addons/primes/panel.gd" id="1_ph1id"]
+[ext_resource type="Texture2D" uid="uid://cli7h6ec24gaq" path="res://addons/primes/drawables/person.svg" id="2_person"]
+[ext_resource type="Texture2D" uid="uid://cay8qjk6l16pn" path="res://addons/primes/drawables/logout.svg" id="3_logout"]
+[ext_resource type="Script" uid="uid://cdtx2mvm6hosn" path="res://addons/primes/ui/author_section.gd" id="4_author"]
+[ext_resource type="Script" uid="uid://br4g7yceka20u" path="res://addons/primes/ui/published_list.gd" id="5_published_list"]
+[ext_resource type="Script" uid="uid://d2y73txwiqwro" path="res://addons/primes/ui/publish_form.gd" id="6_publish_form"]
+[ext_resource type="Script" uid="uid://11ui3nuo387y" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
+[ext_resource type="Script" uid="uid://g0joyhntmo3u" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
+[ext_resource type="Script" uid="uid://df3173x463ulk" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
 
 [sub_resource type="StyleBoxEmpty" id="SB_EMPTY"]
 
@@ -27,15 +26,12 @@ theme_override_constants/separation = 8
 
 [node name="EditDialog" type="AcceptDialog" parent="Root"]
 title = "Edit details"
-visible = false
-exclusive = true
-dialog_text = ""
+ok_button_text = "Update"
 script = ExtResource("9_edit")
 
 [node name="EditVBox" type="VBoxContainer" parent="Root/EditDialog"]
-layout_mode = 2
-theme_override_constants/separation = 8
 custom_minimum_size = Vector2(500, 0)
+theme_override_constants/separation = 8
 
 [node name="NameGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
 layout_mode = 2
@@ -63,7 +59,6 @@ custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 wrap_mode = 1
-
 
 [node name="Stack" type="VBoxContainer" parent="Root"]
 layout_mode = 2
@@ -121,8 +116,7 @@ script = ExtResource("5_published_list")
 [node name="PublishedListContainer" type="VBoxContainer" parent="Root/Stack/Publish/PublishedScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 1
-theme_override_constants/separation = 4
+theme_override_constants/separation = 0
 
 [node name="DividerContainer" type="MarginContainer" parent="Root/Stack/Publish"]
 layout_mode = 2
@@ -259,11 +253,42 @@ layout_mode = 2
 layout_mode = 2
 alignment = 2
 
+[node name="BackBtn" type="Button" parent="Root/Stack/SignInWrapper/SignIn/SignInRow"]
+visible = false
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Back"
+
 [node name="SignInBtn" type="Button" parent="Root/Stack/SignInWrapper/SignIn/SignInRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Sign In"
+text = "Send code"
+
+[node name="InitializingWrapper" type="Control" parent="Root/Stack"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Initializing" type="VBoxContainer" parent="Root/Stack/InitializingWrapper"]
+layout_mode = 2
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -20.0
+offset_right = 100.0
+offset_bottom = 20.0
+alignment = 1
+
+[node name="Label" type="Label" parent="Root/Stack/InitializingWrapper/Initializing"]
+layout_mode = 2
+text = "Initializing..."
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Log" type="RichTextLabel" parent="Root"]
 custom_minimum_size = Vector2(0, 200)
