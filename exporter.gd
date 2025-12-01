@@ -43,6 +43,12 @@ func set_prime_visibility(host: Node, token: String, prime_id: String, is_public
 func update_prime_meta(host: Node, token: String, prime_id: String, name: String, description: String) -> Dictionary:
 	return await _user_api.update_prime_meta(host, token, prime_id, name, description)
 
+func fetch_prime_flags(host: Node, token: String, prime_id: String) -> Dictionary:
+	return await _user_api.fetch_prime_flags(host, token, prime_id)
+	
+func submit_flag_appeal(host: Node, token: String, flag_id: int, message: String) -> Dictionary:
+	return await _user_api.submit_flag_appeal(host, token, flag_id, message)
+
 func pack_zip() -> Dictionary:
 	return _packager.pack_zip()
 	

@@ -5,6 +5,7 @@ class_name PublishedList
 signal copy_link_requested(prime_id: String)
 signal toggle_visibility_requested(prime_id: String, name: String, is_public: bool)
 signal edit_prime_requested(prime_id: String, prev_name: String, name: String, description: String)
+signal flag_details_requested(prime_id: String, prime_name: String)
 
 @onready var list_container: VBoxContainer = $PublishedListContainer
 
@@ -66,6 +67,7 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	var created_at_raw := String(meta.get("createdAt", ""))
 	var likes := int(meta.get("likes", 0))
 	var is_public := bool(meta.get("public", true))
+	var flagged := bool(meta.get("flagged", false))
 	
 	if name == "":
 		name = prime_id
@@ -94,10 +96,13 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	var link_btn := _create_link_button(prime_id)
 	
 	# Visibility toggle button
-	var vis_btn := _create_visibility_button(prime_id, name, is_public)
+	var vis_btn := _create_visibility_button(prime_id, name, is_public, flagged)
 	
 	# Edit button
 	var edit_btn := _create_edit_button(prime_id, name, desc)
+	
+	# Flags button
+	var flags_btn := _create_flag_button(flagged, prime_id, name)
 	
 	row.add_child(date_lbl)
 	row.add_child(name_lbl)
@@ -105,6 +110,7 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	row.add_child(link_btn)
 	row.add_child(vis_btn)
 	row.add_child(edit_btn)
+	row.add_child(flags_btn)
 
 func _populate_empty_message_row(row_panel: PanelContainer) -> void:
 	var row := HBoxContainer.new()
@@ -139,7 +145,7 @@ func _create_link_button(prime_id: String) -> Button:
 	
 	return btn
 
-func _create_visibility_button(prime_id: String, name: String, is_public: bool) -> Button:
+func _create_visibility_button(prime_id: String, name: String, is_public: bool, flagged: bool) -> Button:
 	var btn := Button.new()
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
@@ -147,11 +153,42 @@ func _create_visibility_button(prime_id: String, name: String, is_public: bool) 
 	btn.set_meta("name", name)
 	btn.set_meta("is_public", is_public)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_update_visibility_icon(btn, is_public)
-	btn.pressed.connect(func():
+
+	# If this game has one or more flags, we lock visibility as "hidden"
+	# and prevent the user from toggling it in the plugin.
+	if flagged:
+		# Visually: always show as "hidden"
+		_update_visibility_icon(btn, false)
+
+		# Logically: disable interaction
+		btn.disabled = false
 		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		toggle_visibility_requested.emit(prime_id, btn.get_meta("name"), btn.get_meta("is_public")))
-	
+		btn.modulate = Color(1,1,1,0.35)
+		btn.tooltip_text = "Locked due to flags"
+
+		# Optional: slightly dim it to look disabled
+		btn.self_modulate = Color(1, 1, 1, 0.6)
+
+	else:
+		# Normal behavior: toggle visibility
+		_update_visibility_icon(btn, is_public)
+
+		btn.tooltip_text = (
+			"Hide from feed (still accessible by direct link)"
+			if is_public
+			else "Show in feed"
+		)
+
+		btn.pressed.connect(func():
+			# Block further mouse events until server reply updates state
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			toggle_visibility_requested.emit(
+				prime_id,
+				btn.get_meta("name"),
+				btn.get_meta("is_public")
+			)
+		)
+
 	return btn
 
 func _create_edit_button(prime_id: String, name: String, desc: String) -> Button:
@@ -164,6 +201,49 @@ func _create_edit_button(prime_id: String, name: String, desc: String) -> Button
 	btn.pressed.connect(func(): edit_prime_requested.emit(prime_id, name, desc))
 	
 	return btn
+	
+func _create_flag_button(flagged: bool, prime_id: String, prime_name: String) -> Button:
+	var btn := Button.new()
+	btn.flat = true
+	btn.focus_mode = Control.FOCUS_NONE
+
+	var theme := EditorInterface.get_editor_theme()
+	var icon := theme.get_icon("NodeWarning", "EditorIcons")
+
+	# Use the same style for all states so size doesn't change
+	var empty_style := StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal", empty_style)
+	btn.add_theme_stylebox_override("hover", empty_style)
+	btn.add_theme_stylebox_override("pressed", empty_style)
+	btn.add_theme_stylebox_override("focus", empty_style)
+	btn.add_theme_stylebox_override("disabled", empty_style)
+
+	# Fix the width based on the icon size (plus a little padding)
+	var icon_width := float(icon.get_width())
+	var icon_height := float(icon.get_height())
+	btn.custom_minimum_size = Vector2(icon_width + 8.0, icon_height)
+
+	if flagged:
+		# Visible, interactive
+		btn.icon = icon
+		btn.disabled = false
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn.tooltip_text = "View flags and appeal"
+		btn.self_modulate = Color(1, 1, 1, 1)
+
+		btn.pressed.connect(func():
+			flag_details_requested.emit(prime_id, prime_name)
+		)
+	else:
+		# Invisible spacer: same size, same style, but not clickable
+		btn.disabled = true
+		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.tooltip_text = ""
+		# Make it visually disappear while keeping the size
+		btn.self_modulate = Color(1, 1, 1, 0)
+
+	return btn
+
 
 func _update_visibility_icon(btn: Button, is_public: bool) -> void:
 	if is_public:

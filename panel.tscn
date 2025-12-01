@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dbn4peoxs5qjg"]
+[gd_scene load_steps=12 format=3 uid="uid://dbn4peoxs5qjg"]
 
 [ext_resource type="Script" uid="uid://b7xe5agcja04x" path="res://addons/primes/panel.gd" id="1_ph1id"]
 [ext_resource type="Texture2D" uid="uid://cli7h6ec24gaq" path="res://addons/primes/drawables/person.svg" id="2_person"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://11ui3nuo387y" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
 [ext_resource type="Script" uid="uid://g0joyhntmo3u" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
 [ext_resource type="Script" uid="uid://df3173x463ulk" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
+[ext_resource type="Script" uid="uid://fbq4y4wrldes" path="res://addons/primes/ui/flags_dialog.gd" id="10_lhi0s"]
 
 [sub_resource type="StyleBoxEmpty" id="SB_EMPTY"]
 
@@ -300,3 +301,29 @@ text = "[i]Logs will appear here...[/i]"
 autowrap_mode = 2
 selection_enabled = true
 script = ExtResource("7_logs")
+
+[node name="FlagsDialog" type="AcceptDialog" parent="Root"]
+title = "Flags for TEST_PRIME"
+position = Vector2i(0, 36)
+size = Vector2i(56, 74)
+ok_button_text = "Close"
+script = ExtResource("10_lhi0s")
+metadata/_custom_type_script = "uid://fbq4y4wrldes"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/FlagsDialog"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 48.0
+offset_bottom = 28.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Root/FlagsDialog/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="FlagsList" type="VBoxContainer" parent="Root/FlagsDialog/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

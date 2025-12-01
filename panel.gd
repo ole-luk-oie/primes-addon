@@ -15,6 +15,7 @@ var exporter: PrimesExporter = PrimesExporter.new()
 @onready var publish_form: PublishForm = $Root/Stack/Publish/Form
 @onready var logs: LogsArea = $Root/Log
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
+@onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
 
 # State
@@ -38,10 +39,14 @@ func _ready() -> void:
 	published_list.copy_link_requested.connect(_on_copy_link)
 	published_list.toggle_visibility_requested.connect(_on_toggle_visibility)
 	published_list.edit_prime_requested.connect(_on_edit_prime)
+	published_list.flag_details_requested.connect(_on_flag_details_requested)
 	
 	publish_form.publish_requested.connect(_on_publish)
 	
 	edit_dialog.update_requested.connect(_on_update_prime_meta)
+	
+	if flags_dialog:
+		flags_dialog.appeal_submitted.connect(_on_flag_appeal_submitted)
 	
 	# Initialize view
 	ensure_correct_subview()
@@ -165,6 +170,81 @@ func _on_update_prime_meta(prime_id: String, prev_name: String, name: String, de
 	edit_dialog.hide()
 	
 	await _update_primes()
+
+func _on_flag_details_requested(prime_id: String, prime_name: String) -> void:
+	if _token.is_empty():
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
+		return
+	
+	await logs.append_log("Fetching flags for [b]%s[/b] (id=%s)..." % [prime_name, prime_id])
+	
+	var res := await exporter.fetch_prime_flags(self, _token, prime_id)
+	
+	if not res.get("success", false):
+		var err := String(res.get("error", "unknown"))
+		if err == "token_expired":
+			await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
+			_token = ""
+			if plugin:
+				plugin.clear_token()
+			_show_sign_in()
+			return
+		
+		await logs.append_log("[color=red]Failed to fetch flags:[/color] %s" % err, "red")
+		return
+	
+	var flags: Array = res.get("flags", [])
+	
+	flags_dialog.show_flags(prime_id, prime_name, flags)
+
+func _on_flag_appeal_submitted(prime_id: String, flag_id: int, message: String) -> void:
+	if _token.is_empty():
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
+		return
+
+	message = String(message).strip_edges()
+	if message.is_empty():
+		await logs.append_log("[color=orange]Please enter a comment before appealing.[/color]", "orange")
+		# Re-enable UI if dialog had already disabled it
+		if flags_dialog:
+			flags_dialog.set_appeal_enabled(flag_id, true)
+		return
+
+	await logs.append_log(
+		"Submitting appeal for flag [b]%d[/b] on prime [b]%s[/b]..." % [flag_id, prime_id]
+	)
+
+	var res := await exporter.submit_flag_appeal(self, _token, flag_id, message)
+
+	if not res.get("success", false):
+		var err := String(res.get("error", "unknown"))
+
+		if err == "token_expired":
+			await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
+			_token = ""
+			if plugin:
+				plugin.clear_token()
+			_show_sign_in()
+			return
+
+		# Request failed → restore button / input so user can try again
+		if flags_dialog:
+			flags_dialog.set_appeal_enabled(flag_id, true)
+
+		await logs.append_log(
+			"[color=red]Failed to submit appeal:[/color] %s" % err,
+			"red"
+		)
+		return
+
+	# Success → update the row UI to APPEALED state
+	if flags_dialog:
+		flags_dialog.mark_flag_appealed(flag_id)
+
+	await logs.append_log(
+		"[color=green]Appeal submitted for flag[/color] [b]%d[/b] on [b]%s[/b]." % [flag_id, prime_id]
+	)
+
 
 # === User Data Management ===
 func _update_primes() -> bool:
