@@ -1,10 +1,9 @@
 extends Object
 class_name UserAPI
 
-const BASE_URL = "https://ole-luk-oie.com/primes"
-const USER_INFO_URL = BASE_URL + "/dev/info"
-const PRIMES_SET_PUBLIC_URL = BASE_URL + "/dev/set-public"
-const EDIT_META_URL = BASE_URL + "/dev/edit-meta"
+const USER_INFO_URL = PrimesConfig.BASE_URL + "/dev/info"
+const PRIMES_SET_PUBLIC_URL = PrimesConfig.BASE_URL + "/dev/set-public"
+const EDIT_META_URL = PrimesConfig.BASE_URL + "/dev/edit-meta"
 
 func fetch_user_info(host: Node, token: String) -> Dictionary:
 	if token.is_empty():

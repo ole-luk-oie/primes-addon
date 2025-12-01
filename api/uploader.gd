@@ -1,8 +1,7 @@
 extends Object
 class_name Uploader
 
-const BASE_URL = "https://ole-luk-oie.com/primes"
-const UPLOAD_URL = BASE_URL + "/dev/upload"
+const UPLOAD_URL = PrimesConfig.BASE_URL + "/dev/upload"
 
 func upload_zip(host: Node, token: String, zip_path: String,
 		is_public := false, name := "", description := "") -> Dictionary:

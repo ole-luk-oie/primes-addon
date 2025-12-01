@@ -1,11 +1,10 @@
 extends Object
 class_name AuthAPI
 
-const BASE_URL = "https://ole-luk-oie.com/primes"
-const AUTH_EMAIL_START_URL = BASE_URL + "/auth/email/start"
-const AUTH_EMAIL_VERIFY_URL = BASE_URL + "/auth/email/verify"
-const AUTH_USERNAME_URL = BASE_URL + "/auth/username"
-const AUTH_TOKEN_URL = BASE_URL + "/auth/token"
+const AUTH_EMAIL_START_URL = PrimesConfig.BASE_URL + "/auth/email/start"
+const AUTH_EMAIL_VERIFY_URL = PrimesConfig.BASE_URL + "/auth/email/verify"
+const AUTH_USERNAME_URL = PrimesConfig.BASE_URL + "/auth/username"
+const AUTH_TOKEN_URL = PrimesConfig.BASE_URL + "/auth/token"
 
 func start_email_sign_in(host: Node, email: String) -> Dictionary:
 	var headers := PackedStringArray(["Content-Type: application/json"])
