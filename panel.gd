@@ -40,6 +40,7 @@ func _ready() -> void:
 	published_list.toggle_visibility_requested.connect(_on_toggle_visibility)
 	published_list.edit_prime_requested.connect(_on_edit_prime)
 	published_list.flag_details_requested.connect(_on_flag_details_requested)
+	published_list.delete_prime_requested.connect(_on_delete_prime)
 	
 	publish_form.publish_requested.connect(_on_publish)
 	
@@ -275,6 +276,69 @@ func _update_primes() -> bool:
 		else:
 			await logs.append_log("[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]", "orange")
 		return true
+
+func _on_delete_prime(prime_id: String, name: String) -> void:
+	if _token.is_empty():
+		await logs.append_log("[color=orange]Session expired. Please sign in again.[/color]", "orange")
+		return
+
+	# Confirmation dialog
+	var dlg := ConfirmationDialog.new()
+	dlg.title = "Delete from Primes"
+	dlg.dialog_text = "Are you sure you want to delete \"%s\"?\n\n" % name +\
+		"This removes the cloud copy from the catalog and feed. " +\
+		"Your local Godot project stays unchanged.\n\n"
+
+	dlg.min_size = Vector2(420, 100)
+
+		# Center the text in the dialog
+	var lbl := dlg.get_label() # AcceptDialog / ConfirmationDialog exposes this
+	if lbl:
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.autowrap_mode = TextServer.AutowrapMode.AUTOWRAP_WORD
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# Optional: customize buttons
+	var ok_btn := dlg.get_ok_button()
+	if ok_btn:
+		ok_btn.text = "Delete"
+	var cancel_btn := dlg.get_cancel_button()
+	if cancel_btn:
+		cancel_btn.text = "Cancel"
+
+	add_child(dlg)
+	dlg.popup_centered()
+
+	dlg.canceled.connect(func():
+		dlg.queue_free()
+	)
+
+	dlg.confirmed.connect(func():
+		# Run the async delete flow
+		await _perform_prime_delete(prime_id, name)
+		dlg.queue_free()
+	)
+
+func _perform_prime_delete(prime_id: String, name: String) -> void:
+	await logs.append_log("Deleting [b]%s[/b] from Primes..." % name)
+
+	var res := await exporter.delete_prime(self, _token, prime_id)
+
+	if not res.get("success", false):
+		var err := String(res.get("error", "unknown"))
+		await logs.append_log(
+			"[color=red]Failed to delete[/color] [b]%s[/b]: %s" % [name, err],
+			"red"
+		)
+		return
+
+	await logs.append_log(
+		"[color=green]Deleted[/color] [b]%s[/b] from Primes." % name
+	)
+
+	# Refresh list so the row disappears
+	await _update_primes()
+
 
 # === Publish Handlers ===
 func _on_publish(name: String, description: String, hide_from_feed: bool) -> void:

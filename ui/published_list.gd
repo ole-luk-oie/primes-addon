@@ -6,6 +6,7 @@ signal copy_link_requested(prime_id: String)
 signal toggle_visibility_requested(prime_id: String, name: String, is_public: bool)
 signal edit_prime_requested(prime_id: String, prev_name: String, name: String, description: String)
 signal flag_details_requested(prime_id: String, prime_name: String)
+signal delete_prime_requested(prime_id: String, name: String)
 
 @onready var list_container: VBoxContainer = $PublishedListContainer
 
@@ -89,7 +90,7 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	
 	# Likes
 	var likes_lbl := Label.new()
-	likes_lbl.text = "♥ " + str(likes)
+	likes_lbl.text = str(likes) + " ♥ "
 	likes_lbl.size_flags_horizontal = Control.SIZE_SHRINK_END
 	
 	# Copy link button
@@ -101,6 +102,9 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	# Edit button
 	var edit_btn := _create_edit_button(prime_id, name, desc)
 	
+	# Delete button
+	var delete_btn := _create_delete_button(prime_id, name)
+	
 	# Flags button
 	var flags_btn := _create_flag_button(flagged, prime_id, name)
 	
@@ -110,6 +114,7 @@ func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	row.add_child(link_btn)
 	row.add_child(vis_btn)
 	row.add_child(edit_btn)
+	row.add_child(delete_btn)
 	row.add_child(flags_btn)
 
 func _populate_empty_message_row(row_panel: PanelContainer) -> void:
@@ -201,6 +206,28 @@ func _create_edit_button(prime_id: String, name: String, desc: String) -> Button
 	btn.pressed.connect(func(): edit_prime_requested.emit(prime_id, name, desc))
 	
 	return btn
+	
+func _create_delete_button(prime_id: String, name: String) -> Button:
+	var btn := Button.new()
+	btn.flat = true
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	var theme := EditorInterface.get_editor_theme()
+	btn.icon = theme.get_icon("Close", "EditorIcons")
+
+	btn.tooltip_text = "Delete from Primes"
+	btn.self_modulate = Color(1.0, 0.4, 0.4, 1.0) # soft red tint
+
+	btn.set_meta("prime_id", prime_id)
+	btn.set_meta("name", name)
+
+	btn.pressed.connect(func():
+		delete_prime_requested.emit(prime_id, name)
+	)
+
+	return btn
+
 	
 func _create_flag_button(flagged: bool, prime_id: String, prime_name: String) -> Button:
 	var btn := Button.new()

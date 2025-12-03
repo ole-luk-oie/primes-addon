@@ -48,6 +48,9 @@ func fetch_prime_flags(host: Node, token: String, prime_id: String) -> Dictionar
 	
 func submit_flag_appeal(host: Node, token: String, flag_id: int, message: String) -> Dictionary:
 	return await _user_api.submit_flag_appeal(host, token, flag_id, message)
+	
+func delete_prime(host: Node, token: String, prime_id: String) -> Dictionary:
+	return await _user_api.delete_prime(host, token, prime_id)
 
 func pack_zip() -> Dictionary:
 	return _packager.pack_zip()
