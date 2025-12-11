@@ -18,6 +18,10 @@ var exporter: PrimesExporter = PrimesExporter.new()
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
 
+# adb stuff
+var _device_check_timer: Timer
+var _has_android_device: bool = false
+
 # State
 var _token: String = ""
 var _username: String = ""
@@ -43,11 +47,20 @@ func _ready() -> void:
 	published_list.delete_prime_requested.connect(_on_delete_prime)
 	
 	publish_form.publish_requested.connect(_on_publish)
+	publish_form.run_on_phone_requested.connect(_on_run_on_phone)
 	
 	edit_dialog.update_requested.connect(_on_update_prime_meta)
 	
 	if flags_dialog:
 		flags_dialog.appeal_submitted.connect(_on_flag_appeal_submitted)
+	
+	# Start device polling (lightweight, every couple of seconds)
+	_device_check_timer = Timer.new()
+	_device_check_timer.wait_time = 2.0
+	_device_check_timer.one_shot = false
+	_device_check_timer.timeout.connect(_on_device_check_timeout)
+	add_child(_device_check_timer)
+	_device_check_timer.start()
 	
 	# Initialize view
 	ensure_correct_subview()
@@ -82,6 +95,12 @@ func _show_publish() -> void:
 	sign_in_wrapper.visible = false
 	publish_vb.visible = true
 
+func _on_device_check_timeout() -> void:
+	var available := exporter.probe_android_device()
+
+	_has_android_device = available
+	publish_form.set_dev_run_available(_has_android_device)
+
 # === Sign-In Handlers ===
 func _on_sign_in_completed(token: String, username: String) -> void:
 	_token = token
@@ -106,6 +125,31 @@ func _on_logout() -> void:
 	await logs.append_log("Signed out")
 	
 	_show_sign_in()
+
+func _on_run_on_phone(name: String, description: String) -> void:
+	if not _has_android_device:
+		await logs.append_log(
+			"[color=orange]No Android device detected via adb.[/color]",
+			"orange"
+		)
+		return
+
+	publish_form.set_enabled(false)
+
+	var ok := await exporter.dev_run_on_phone(
+		self,
+		logs,
+		_username,
+		name,
+		description
+	)
+
+	if ok:
+		await logs.append_log("[color=green]Launched on device.[/color]")
+	else:
+		await logs.append_log("[color=red]Failed to launch on device.[/color]", "red")
+
+	publish_form.set_enabled(true)
 
 # === Published List Handlers ===
 func _on_copy_link(prime_id: String) -> void:

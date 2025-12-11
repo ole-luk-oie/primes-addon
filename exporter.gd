@@ -9,6 +9,7 @@ var _auth_api: AuthAPI = AuthAPI.new()
 var _user_api: UserAPI = UserAPI.new()
 var _packager: Packager = Packager.new()
 var _uploader: Uploader = Uploader.new()
+var _dev_runner: DevRunner = DevRunner.new()
 
 class ExcludeSelfExportPlugin:
 	extends EditorExportPlugin
@@ -61,3 +62,23 @@ func upload_zip(host: Node, token: String, zip_path: String, is_public: bool,
 
 func cleanup_temp(zip_path: String):
 	_packager.cleanup_temp(zip_path)
+	
+	# === Dev run helpers ===
+
+func probe_android_device() -> bool:
+	return _dev_runner.probe_android_device()
+
+func dev_run_on_phone(
+	host: Node,
+	logs,
+	username: String,
+	form_name: String,
+	form_desc: String
+) -> bool:
+	return await _dev_runner.run_dev_on_phone(
+		host,
+		logs,
+		username,
+		form_name,
+		form_desc
+	)

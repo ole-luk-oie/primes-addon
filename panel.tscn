@@ -201,6 +201,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
+[node name="RunOnPhoneBtn" type="Button" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+tooltip_text = "Run current project on connected Android device"
+text = "Run in the app"
+
 [node name="PublishBtn" type="Button" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2

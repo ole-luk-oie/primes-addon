@@ -69,6 +69,9 @@ func upload_zip(host: Node, token: String, zip_path: String,
 			]
 		}
 
+func get_engine_string() -> Dictionary:
+	return _get_engine_string()
+
 func _get_engine_string() -> Dictionary:
 	var version_info = Engine.get_version_info()
 	var engine = "godot%s_%s" % [version_info["major"], version_info["minor"]]
@@ -76,24 +79,21 @@ func _get_engine_string() -> Dictionary:
 	var renderer_name: String = str(ProjectSettings.get_setting_with_override("rendering/renderer/rendering_method"))
 	match renderer_name:
 		"gl_compatibility":
-			engine = "web" + engine
-		"forward_plus":
 			return {
-				"success": false,
-				"error": "Unsupported renderer '%s' please switch to mobile or compatibility" % renderer_name
+				"success": true,
+				"engine": "web" + engine
 			}
 		"mobile":
-			pass
+			return {
+				"success": false,
+				"error": "Mobile renderer is not supported yet, we're working on it. Meanwhile please switch to Compatibility"
+			}
 		_:
 			return {
 				"success": false,
-				"error": "Unsupported renderer '%s' please switch to mobile or compatibility" % renderer_name
+				"error": "Unsupported renderer '%s' please switch to Compatibility" % renderer_name
 			}
 	
-	return {
-		"success": true,
-		"engine": engine
-	}
 
 func _add_part(body: PackedByteArray, boundary: String, name: String, value: String) -> void:
 	body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
