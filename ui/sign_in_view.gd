@@ -30,6 +30,7 @@ func setup(exporter: PrimesExporter, logs: LogsArea) -> void:
 func _ready() -> void:
 	sign_in_btn.pressed.connect(_on_sign_in)
 	back_btn.pressed.connect(_on_back)
+	email_le.text_submitted.connect(_on_text_submitted)
 	reset()
 
 func reset() -> void:
@@ -48,6 +49,12 @@ func reset() -> void:
 	back_btn.visible = false
 	
 	email_le.grab_focus()
+
+func _on_text_submitted(new_text: String) -> void:
+	if sign_in_btn.disabled:
+		return
+	
+	_on_sign_in()
 
 func _on_sign_in() -> void:
 	match _auth_step:

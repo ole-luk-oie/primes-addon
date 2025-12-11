@@ -26,10 +26,6 @@ var _has_android_device: bool = false
 var _token: String = ""
 var _username: String = ""
 
-# Recovery lock handling
-var _rec_lock_path := OS.get_user_data_dir().path_join(".recovery_mode_lock")
-var _rec_lock_preexisting := false
-
 var _initialized = false
 
 func _ready() -> void:
@@ -386,7 +382,6 @@ func _perform_prime_delete(prime_id: String, name: String) -> void:
 
 # === Publish Handlers ===
 func _on_publish(name: String, description: String, hide_from_feed: bool) -> void:
-	_remember_recovery_lock_state()
 	
 	var is_public: bool = not hide_from_feed
 	
@@ -412,8 +407,6 @@ func _on_publish(name: String, description: String, hide_from_feed: bool) -> voi
 		publish_form.clear_form()
 	
 	publish_form.set_enabled(true)
-	
-	_clear_recovery_lock_if_new()
 	
 	await _update_primes()
 
@@ -443,17 +436,3 @@ func pack_and_upload(host: Node, token: String, is_public: bool,
 	exporter.cleanup_temp(zip_path)
 	
 	return upload_result
-
-# === Recovery Lock Management ===
-func _remember_recovery_lock_state() -> void:
-	_rec_lock_preexisting = FileAccess.file_exists(_rec_lock_path)
-	#if _rec_lock_preexisting:
-		#await logs.append_log("[i]Editor recovery lock is set. [/i]")
-	#else:
-		#await logs.append_log("[i]No editor recovery lock.[/i]")
-
-func _clear_recovery_lock_if_new() -> void:
-	if not _rec_lock_preexisting and FileAccess.file_exists(_rec_lock_path):
-		var err := DirAccess.remove_absolute(_rec_lock_path)
-		#if err == OK:
-			#await logs.append_log("[i]Cleared editor recovery lock.[/i]")

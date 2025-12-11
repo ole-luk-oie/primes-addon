@@ -12,6 +12,11 @@ func pack_zip() -> Dictionary:
 	var exe := OS.get_executable_path()
 	var src_proj := ProjectSettings.globalize_path("res://")
 
+	# --- Recovery lock handling ---------------
+	var rec_lock_path := OS.get_user_data_dir().path_join(".recovery_mode_lock")
+	var rec_lock_preexisting := FileAccess.file_exists(rec_lock_path)
+	# ------------------------------------------
+	
 	# 1) Make a temp copy of the project (no editor data, no plugin)
 	var tmp_proj := _make_temp_copy(src_proj)
 	if tmp_proj == "":
@@ -40,6 +45,12 @@ func pack_zip() -> Dictionary:
 		"--export-pack", preset_name, tmp_out
 	]
 	var exit_code := OS.execute(exe, args, [], true, false)
+	
+		# --- Clear recovery lock if this export created it ---
+	if not rec_lock_preexisting and FileAccess.file_exists(rec_lock_path):
+		DirAccess.remove_absolute(rec_lock_path)
+	# -----------------------------------------------------
+	
 	if exit_code != 0:
 		_cleanup_temp_for_path(tmp_out)
 		return {

@@ -13,10 +13,11 @@ func _enter_tree() -> void:
 	panel.visible = false
 	panel.plugin = self 
 	panel.exporter = exporter
-
+	
 func _exit_tree() -> void:
 	if is_instance_valid(panel):
 		panel.queue_free()
+
 
 # --- Main Screen hooks (this creates the button next to 2D/3D/Script/AssetLib) ---
 func _get_plugin_name() -> String: return "Primes"
