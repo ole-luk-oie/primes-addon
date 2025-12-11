@@ -13,10 +13,16 @@ const EXTRA_DEV_DESC        = "com.olelukoie.primes.EXTRA_DEV_DESC"
 
 const DEV_ID_SETTING        := "primes/dev_id"
 
-# For building the dev zip; keeps this helper self-contained.
 var _packager: Packager = Packager.new()
-# For figuring out engine string
 var _uploader: Uploader = Uploader.new()
+
+# HTTP server for serving dev builds
+var _server: TCPServer = null
+var _server_port: int = 8765
+var _file_to_serve: String = ""
+var _server_running: bool = false
+
+var _process_conn_id: int = -1
 
 # --- Public API ---
 
@@ -36,15 +42,13 @@ func probe_android_device() -> bool:
 		if line == "":
 			continue
 
-		# Skip obvious header-ish lines without depending on exact wording
 		if line.to_lower().contains("list of devices"):
 			continue
 
-		# Normalize tabs → spaces, then collapse runs of spaces
 		line = line.replace("\t", " ")
 
 		var cols: Array = []
-		for token in line.split(" ", false): # ignore empty
+		for token in line.split(" ", false):
 			var t := String(token).strip_edges()
 			if t != "":
 				cols.append(t)
@@ -74,11 +78,8 @@ func _is_app_installed() -> bool:
 		return false
 
 	var text := String(out[0])
-	# Typical output: "package:/data/app/~~.../com.olelukoie.primes-XXXXX==/base.apk"
 	return text.find("package:") != -1
 
-## High-level “run on phone” flow.
-## Returns `true` on success, `false` on any failure.
 func run_dev_on_phone(
 	host: Node,
 	logs,
@@ -108,7 +109,25 @@ func run_dev_on_phone(
 	var zip_path: String = pack_result.get("zip_path", "")
 	await logs.append_log("Dev bundle built at: [code]%s[/code]" % zip_path)
 
-	# 2) Derive dev meta from form + project settings
+	# 2) Start HTTP server on computer
+	await logs.append_log("Starting local HTTP server...")
+	if not _start_http_server(zip_path, host):
+		await logs.append_log("[color=red]Failed to start HTTP server[/color]", "red")
+		return false
+
+	# 3) Set up adb reverse so device can reach computer's localhost
+	await logs.append_log("Setting up port forwarding...")
+	var reverse_args := PackedStringArray([
+		"reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port
+	])
+	var reverse_code := OS.execute("adb", reverse_args, [], true, false)
+	
+	if reverse_code != 0:
+		await logs.append_log("[color=red]Failed to set up port forwarding[/color]", "red")
+		_stop_http_server()
+		return false
+
+	# 4) Derive dev meta from form + project settings
 	var dev_name   := _get_dev_name(form_name)
 	var dev_id     := _get_or_create_dev_id(dev_name)
 	var dev_author := _get_dev_author(username)
@@ -122,6 +141,7 @@ func run_dev_on_phone(
 			% String(engine_result.get("error", "Unknown engine error")),
 			"red"
 		)
+		_stop_http_server()
 		return false
 	var dev_engine := String(engine_result.get("engine", ""))
 
@@ -130,10 +150,13 @@ func run_dev_on_phone(
 		% [dev_id, dev_author, dev_name]
 	)
 
-	# 3) Push bundle & start activity via adb
-	var ok := await _push_and_start_on_android(
+	# 5) Start activity with download URL
+	var zip_filename := zip_path.get_file()
+	var download_url := "http://localhost:%d/%s" % [_server_port, zip_filename]
+	
+	var ok := await _start_dev_on_android(
 		logs,
-		zip_path,
+		download_url,
 		dev_id,
 		dev_engine,
 		dev_author,
@@ -141,7 +164,140 @@ func run_dev_on_phone(
 		dev_desc
 	)
 
+	if ok:
+		await logs.append_log("App is downloading the bundle, your prime should start shortly...")
+		# Keep server running for download
+		await host.get_tree().create_timer(15.0).timeout
+	
+	_stop_http_server()
+	
 	return ok
+
+func _start_http_server(file_path: String, host: Node) -> bool:
+	_server = TCPServer.new()
+	
+	# Try multiple ports
+	var ports_to_try := [8765, 8766, 8767, 8768, 8769]
+	var success := false
+	
+	for port in ports_to_try:
+		var err := _server.listen(port, "127.0.0.1")
+		if err == OK:
+			_server_port = port
+			success = true
+			break
+	
+	if not success:
+		push_error("Failed to start HTTP server on any port")
+		return false
+	
+	_file_to_serve = file_path
+	_server_running = true
+	if _process_conn_id == -1:
+		_process_conn_id = host.get_tree().process_frame.connect(_process_http_server)
+		
+	print("HTTP server started on port %d" % _server_port)
+	return true
+	
+func _stop_http_server() -> void:
+	_server_running = false
+	
+	if _server:
+		_server.stop()
+		_server = null
+
+	var tree := Engine.get_main_loop()
+	if _process_conn_id != -1 and tree and tree.process_frame.is_connected(_process_http_server):
+		tree.process_frame.disconnect(_process_http_server)
+		_process_conn_id = -1
+
+	# Remove only our mapping
+	var res = OS.execute(
+		"adb",
+		PackedStringArray(["reverse", "--remove", "tcp:%d" % _server_port]),
+		[],
+		true,
+		false
+	)
+
+func _process_http_server() -> void:
+	if not _server_running or not _server:
+		return
+	
+	if _server.is_connection_available():
+		var client := _server.take_connection()
+		_handle_http_client(client)
+
+func _handle_http_client(client: StreamPeerTCP) -> void:
+	var request := ""
+	if client.get_available_bytes() > 0:
+		request = client.get_string(client.get_available_bytes())
+
+	# Read file
+	var file := FileAccess.open(_file_to_serve, FileAccess.READ)
+	if not file:
+		var response := "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
+		client.put_data(response.to_utf8_buffer())
+		client.disconnect_from_host()
+		return
+	
+	var file_data := file.get_buffer(file.get_length())
+	file.close()
+	
+	# Send HTTP response
+	var response := "HTTP/1.1 200 OK\r\n"
+	response += "Content-Type: application/zip\r\n"
+	response += "Content-Length: %d\r\n" % file_data.size()
+	response += "Connection: close\r\n"
+	response += "\r\n"
+	
+	client.put_data(response.to_utf8_buffer())
+	client.put_data(file_data)
+	
+	# Give time for data to flush
+	OS.delay_msec(100)
+	client.disconnect_from_host()
+
+func _start_dev_on_android(
+	logs,
+	download_url: String,
+	dev_id: String,
+	engine: String,
+	author: String,
+	name: String,
+	desc: String
+) -> bool:
+	await logs.append_log("Starting Primes app dev run via adb...")
+
+	var comp := "%s/%s" % [ANDROID_PACKAGE, ANDROID_ACTIVITY]
+
+	var am_args := PackedStringArray([
+		"shell", "am", "start",
+		"-n", comp,
+		"--es", EXTRA_DEV_BUNDLE_PATH, download_url,
+		"--es", EXTRA_DEV_ENGINE,      engine,
+		"--es", EXTRA_DEV_ID,          dev_id,
+		"--es", EXTRA_DEV_AUTHOR,      author,
+		"--es", EXTRA_DEV_NAME,        name,
+	])
+
+	if desc.strip_edges() != "":
+		am_args.append_array([
+			"--es", EXTRA_DEV_DESC, desc
+		])
+
+	var am_out: Array = []
+	var am_code := OS.execute("adb", am_args, am_out, true, false)
+
+	if am_code != 0:
+		await logs.append_log(
+			"[color=red]adb shell am start failed (exit %d):[/color]\n[code]%s[/code]"
+			% [am_code, String(am_out[0]) if am_out.size() > 0 else ""],
+			"red"
+		)
+		return false
+
+	return true
 
 # --- Helpers: meta building ---
 
@@ -176,37 +332,30 @@ func _get_dev_desc(form_desc: String) -> String:
 	return ""
 
 func _get_or_create_dev_id(dev_name: String) -> String:
-	# If it already exists, reuse it.
 	if ProjectSettings.has_setting(DEV_ID_SETTING):
 		var existing := String(ProjectSettings.get_setting(DEV_ID_SETTING))
 		if existing != "":
 			return existing
 
-	# Otherwise generate a fresh one and persist it.
 	var fresh := _make_dev_id(dev_name)
 	ProjectSettings.set_setting(DEV_ID_SETTING, fresh)
-	ProjectSettings.save() # writes project.godot
+	ProjectSettings.save()
 
 	return fresh
 
 func _make_dev_id(name: String) -> String:
 	var slug := String(name).strip_edges().to_lower()
-
-	# Replace spaces with hyphens (DNS-friendly form)
 	slug = slug.replace(" ", "-")
 
-	# Remove all not allowed DNS chars
 	var re := RegEx.new()
 	re.compile("[^a-z0-9-]")
 	slug = re.sub(slug, "-", true)
 
-	# Trim leading/trailing hyphens
 	slug = slug.trim_prefix("-").trim_suffix("-")
 
 	if slug == "":
 		slug = "dev"
 
-	# 64-bit random hex suffix
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var hi := rng.randi()
@@ -214,76 +363,3 @@ func _make_dev_id(name: String) -> String:
 	var hex := "%08x%08x" % [hi, lo]
 
 	return "dev_%s_%s" % [slug, hex]
-
-
-# --- Helpers: adb push + am start ---
-
-func _push_and_start_on_android(
-	logs,
-	local_zip_path: String,
-	dev_id: String,
-	engine: String,
-	author: String,
-	name: String,
-	desc: String
-) -> bool:
-	# 1) Ensure remote dir exists
-	var mkdir_args := PackedStringArray([
-		"shell", "mkdir", "-p", _get_dev_remote_dir()
-	])
-	OS.execute("adb", mkdir_args, [], true, false)  # ignore error; dir may exist
-
-	# 2) Push file
-	var remote_path := "%s/%s.zip" % [_get_dev_remote_dir(), dev_id]
-	await logs.append_log("Pushing bundle to device:\n[code]%s[/code]" % remote_path)
-
-	var push_out: Array = []
-	var push_args := PackedStringArray([
-		"push", local_zip_path, remote_path
-	])
-	var push_code := OS.execute("adb", push_args, push_out, true, false)
-
-	if push_code != 0:
-		await logs.append_log(
-			"[color=red]adb push failed (exit %d):[/color]\n[code]%s[/code]"
-			% [push_code, String(push_out[0]) if push_out.size() > 0 else ""],
-			"red"
-		)
-		return false
-
-	# 3) Start activity with dev extras
-	await logs.append_log("Starting Primes app dev run via adb...")
-
-	var comp := "%s/%s" % [ANDROID_PACKAGE, ANDROID_ACTIVITY]
-
-	var am_args := PackedStringArray([
-		"shell", "am", "start",
-		"-n", comp,
-		"--es", EXTRA_DEV_BUNDLE_PATH, remote_path,
-		"--es", EXTRA_DEV_ENGINE,      engine,
-		"--es", EXTRA_DEV_ID,          dev_id,
-		"--es", EXTRA_DEV_AUTHOR,      author,
-		"--es", EXTRA_DEV_NAME,        name,
-	])
-
-	# Only add description extra if we actually have text
-	if desc.strip_edges() != "":
-		am_args.append_array([
-			"--es", EXTRA_DEV_DESC, desc
-		])
-
-	var am_out: Array = []
-	var am_code := OS.execute("adb", am_args, am_out, true, false)
-
-	if am_code != 0:
-		await logs.append_log(
-			"[color=red]adb shell am start failed (exit %d):[/color]\n[code]%s[/code]"
-			% [am_code, String(am_out[0]) if am_out.size() > 0 else ""],
-			"red"
-		)
-		return false
-
-	return true
-	
-func _get_dev_remote_dir() -> String:
-	return "/sdcard/Android/data/%s/files/dev" % ANDROID_PACKAGE
