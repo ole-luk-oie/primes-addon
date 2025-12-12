@@ -32,7 +32,7 @@ func upload_zip(host: Node, token: String, zip_path: String,
 	# File part
 	body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
 	body.append_array(('Content-Disposition: form-data; name="file"; filename="%s"\r\n' % zip_path.get_file()).to_utf8_buffer())
-	body.append_array("Content-Type: application/octet-stream\r\n\r\n".to_utf8_buffer())
+	body.append_array("Content-Type: application/zip\r\n\r\n".to_utf8_buffer())
 	body.append_array(file_buf)
 	body.append_array("\r\n".to_utf8_buffer())
 	body.append_array(("--%s--\r\n" % boundary).to_utf8_buffer())
