@@ -68,17 +68,23 @@ func cleanup_temp(zip_path: String):
 func probe_android_device() -> bool:
 	return _dev_runner.probe_android_device()
 
+func list_android_devices() -> Array:
+	# Returns: [{ "serial": String, "label": String }]
+	return _dev_runner.list_android_devices()
+
 func dev_run_on_phone(
 	host: Node,
 	logs,
 	username: String,
 	form_name: String,
-	form_desc: String
+	form_desc: String,
+	device_serial: String = ""
 ) -> bool:
 	return await _dev_runner.run_dev_on_phone(
 		host,
 		logs,
 		username,
 		form_name,
-		form_desc
+		form_desc,
+		device_serial
 	)

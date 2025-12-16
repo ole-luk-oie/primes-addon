@@ -24,24 +24,28 @@ var _server_running: bool = false
 
 var _process_conn_id: int = -1
 
+# Device used for the current dev run session
+var _active_device_serial: String = ""
+
 # --- Public API ---
 
-func probe_android_device() -> bool:
+func list_android_devices() -> Array:
+	# Returns: [{ "serial": String, "label": String }]
 	var output: Array = []
 	var exit_code := OS.execute("adb", PackedStringArray(["devices"]), output, true, false)
 	if exit_code != 0:
-		return false
+		return []
 
 	if output.is_empty():
-		return false
+		return []
 
 	var text := String(output[0])
+	var devices: Array = []
 
 	for raw_line in text.split("\n"):
 		var line := raw_line.strip_edges()
 		if line == "":
 			continue
-
 		if line.to_lower().contains("list of devices"):
 			continue
 
@@ -56,17 +60,42 @@ func probe_android_device() -> bool:
 		if cols.size() < 2:
 			continue
 
+		var serial := String(cols[0])
 		var state := String(cols[1])
-		if state == "device":
-			return true
 
-	return false
+		if state != "device":
+			continue
 
-func _is_app_installed() -> bool:
+		var model := _adb_getprop(serial, "ro.product.model")
+		if model == "":
+			model = "Android"
+
+		var label := "%s (%s)" % [model, serial]
+		devices.append({
+			"serial": serial,
+			"label": label,
+		})
+
+	return devices
+
+func probe_android_device() -> bool:
+	return list_android_devices().size() > 0
+
+# --- Internal: adb helpers ---
+
+func _adb_getprop(serial: String, prop: String) -> String:
+	var out: Array = []
+	var args := PackedStringArray(["-s", serial, "shell", "getprop", prop])
+	var code := OS.execute("adb", args, out, true, false)
+	if code != 0 or out.is_empty():
+		return ""
+	return String(out[0]).strip_edges()
+
+func _is_app_installed(device_serial: String) -> bool:
 	var out: Array = []
 	var code := OS.execute(
 		"adb",
-		PackedStringArray(["shell", "pm", "path", ANDROID_PACKAGE]),
+		PackedStringArray(["-s", device_serial, "shell", "pm", "path", ANDROID_PACKAGE]),
 		out,
 		true,
 		false
@@ -85,15 +114,44 @@ func run_dev_on_phone(
 	logs,
 	username: String,
 	form_name: String,
-	form_desc: String
+	form_desc: String,
+	device_serial: String = ""
 ) -> bool:
-	if not _is_app_installed():
+	# Resolve device serial
+	var devices := list_android_devices()
+
+	if devices.size() == 0:
 		await logs.append_log(
-			"[color=orange]Primes app is not installed on the connected device.[/color]",
+			"[color=orange]No Android device detected via adb.[/color]",
 			"orange"
 		)
 		return false
-	
+
+	var chosen_serial := String(device_serial).strip_edges()
+	if chosen_serial == "":
+		if devices.size() == 1:
+			chosen_serial = String(devices[0].get("serial", ""))
+		else:
+			chosen_serial = String(devices[0].get("serial", ""))
+			await logs.append_log(
+				"[color=orange]Multiple Android devices detected; selecting the first one: %s[/color]"
+				% String(devices[0].get("label", chosen_serial)),
+				"orange"
+			)
+
+	if chosen_serial == "":
+		await logs.append_log("[color=red]No device selected.[/color]", "red")
+		return false
+
+	_active_device_serial = chosen_serial
+
+	if not _is_app_installed(_active_device_serial):
+		await logs.append_log(
+			"[color=orange]Primes app is not installed on the selected device.[/color]",
+			"orange"
+		)
+		return false
+
 	await logs.append_log("Packing project for dev run on phone...")
 
 	# 1) Pack current project as web bundle
@@ -118,10 +176,11 @@ func run_dev_on_phone(
 	# 3) Set up adb reverse so device can reach computer's localhost
 	await logs.append_log("Setting up port forwarding...")
 	var reverse_args := PackedStringArray([
+		"-s", _active_device_serial,
 		"reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port
 	])
 	var reverse_code := OS.execute("adb", reverse_args, [], true, false)
-	
+
 	if reverse_code != 0:
 		await logs.append_log("[color=red]Failed to set up port forwarding[/color]", "red")
 		_stop_http_server()
@@ -132,7 +191,7 @@ func run_dev_on_phone(
 	var dev_id     := _get_or_create_dev_id(dev_name)
 	var dev_author := _get_dev_author(username)
 	var dev_desc   := _get_dev_desc(form_desc)
-	
+
 	var engine_result := _uploader.get_engine_string()
 	if not engine_result.get("success", false):
 		print(str(engine_result))
@@ -153,7 +212,7 @@ func run_dev_on_phone(
 	# 5) Start activity with download URL
 	var zip_filename := zip_path.get_file()
 	var download_url := "http://localhost:%d/%s" % [_server_port, zip_filename]
-	
+
 	var ok := await _start_dev_on_android(
 		logs,
 		download_url,
@@ -161,47 +220,51 @@ func run_dev_on_phone(
 		dev_engine,
 		dev_author,
 		dev_name,
-		dev_desc
+		dev_desc,
+		_active_device_serial
 	)
 
 	if ok:
 		await logs.append_log("App is downloading the bundle, your prime should start shortly...")
 		# Keep server running for download
 		await host.get_tree().create_timer(15.0).timeout
-	
+
 	_stop_http_server()
-	
+	_active_device_serial = ""
+
 	return ok
+
+# --- HTTP server ---
 
 func _start_http_server(file_path: String, host: Node) -> bool:
 	_server = TCPServer.new()
-	
+
 	# Try multiple ports
 	var ports_to_try := [8765, 8766, 8767, 8768, 8769]
 	var success := false
-	
+
 	for port in ports_to_try:
 		var err := _server.listen(port, "127.0.0.1")
 		if err == OK:
 			_server_port = port
 			success = true
 			break
-	
+
 	if not success:
 		push_error("Failed to start HTTP server on any port")
 		return false
-	
+
 	_file_to_serve = file_path
 	_server_running = true
 	if _process_conn_id == -1:
 		_process_conn_id = host.get_tree().process_frame.connect(_process_http_server)
-		
+
 	print("HTTP server started on port %d" % _server_port)
 	return true
-	
+
 func _stop_http_server() -> void:
 	_server_running = false
-	
+
 	if _server:
 		_server.stop()
 		_server = null
@@ -211,19 +274,32 @@ func _stop_http_server() -> void:
 		tree.process_frame.disconnect(_process_http_server)
 		_process_conn_id = -1
 
-	# Remove only our mapping
-	var res = OS.execute(
-		"adb",
-		PackedStringArray(["reverse", "--remove", "tcp:%d" % _server_port]),
-		[],
-		true,
-		false
-	)
+	# Remove only our reverse mapping, on the active device if known
+	if _active_device_serial.strip_edges() != "":
+		OS.execute(
+			"adb",
+			PackedStringArray([
+				"-s", _active_device_serial,
+				"reverse", "--remove", "tcp:%d" % _server_port
+			]),
+			[],
+			true,
+			false
+		)
+	else:
+		# Fallback (keeps old behavior in case something calls stop without a device)
+		OS.execute(
+			"adb",
+			PackedStringArray(["reverse", "--remove", "tcp:%d" % _server_port]),
+			[],
+			true,
+			false
+		)
 
 func _process_http_server() -> void:
 	if not _server_running or not _server:
 		return
-	
+
 	if _server.is_connection_available():
 		var client := _server.take_connection()
 		_handle_http_client(client)
@@ -240,23 +316,25 @@ func _handle_http_client(client: StreamPeerTCP) -> void:
 		client.put_data(response.to_utf8_buffer())
 		client.disconnect_from_host()
 		return
-	
+
 	var file_data := file.get_buffer(file.get_length())
 	file.close()
-	
+
 	# Send HTTP response
 	var response := "HTTP/1.1 200 OK\r\n"
 	response += "Content-Type: application/zip\r\n"
 	response += "Content-Length: %d\r\n" % file_data.size()
 	response += "Connection: close\r\n"
 	response += "\r\n"
-	
+
 	client.put_data(response.to_utf8_buffer())
 	client.put_data(file_data)
-	
+
 	# Give time for data to flush
 	OS.delay_msec(100)
 	client.disconnect_from_host()
+
+# --- adb launch ---
 
 func _start_dev_on_android(
 	logs,
@@ -265,13 +343,15 @@ func _start_dev_on_android(
 	engine: String,
 	author: String,
 	name: String,
-	desc: String
+	desc: String,
+	device_serial: String
 ) -> bool:
 	await logs.append_log("Starting Primes app dev run via adb...")
 
 	var comp := "%s/%s" % [ANDROID_PACKAGE, ANDROID_ACTIVITY]
 
 	var am_args := PackedStringArray([
+		"-s", device_serial,
 		"shell", "am", "start",
 		"-n", comp,
 		"--es", EXTRA_DEV_BUNDLE_PATH, download_url,

@@ -23,6 +23,11 @@ var exporter: PrimesExporter = PrimesExporter.new()
 var _device_check_timer: Timer
 var _has_android_device: bool = false
 
+var _device_menu: PopupMenu
+var _pending_run_name: String = ""
+var _pending_run_desc: String = ""
+var _pending_devices: Array = [] # [{serial, label}]
+
 # State
 var _token: String = ""
 var _username: String = ""
@@ -57,6 +62,10 @@ func _ready() -> void:
 	
 	if flags_dialog:
 		flags_dialog.appeal_submitted.connect(_on_flag_appeal_submitted)
+	
+	_device_menu = PopupMenu.new()
+	add_child(_device_menu)
+	_device_menu.id_pressed.connect(_on_device_menu_id_pressed)
 	
 	# Start device polling (lightweight, every couple of seconds)
 	_device_check_timer = Timer.new()
@@ -156,7 +165,52 @@ func _on_logout() -> void:
 	_show_sign_in()
 
 func _on_run_on_phone(name: String, description: String) -> void:
+	# Ask exporter for devices (DevRunner does the adb work)
+	var devices := exporter.list_android_devices()
+
+	if devices.size() == 0:
+		await logs.append_log(
+			"[color=orange]No Android device detected via adb.[/color]",
+			"orange"
+		)
+		return
+
+	if devices.size() == 1:
+		var serial := String(devices[0].get("serial", ""))
+		if serial == "":
+			await logs.append_log("[color=red]Device selection failed.[/color]", "red")
+			return
+		await _run_on_phone_with_serial(name, description, serial)
+		return
+
+	# >1 device: popup menu at mouse cursor
+	_pending_run_name = name
+	_pending_run_desc = description
+	_pending_devices = devices
+
+	_device_menu.clear()
+	for i in range(_pending_devices.size()):
+		_device_menu.add_item(String(_pending_devices[i].get("label", "Device")), i)
+
+	var pos := DisplayServer.mouse_get_position()
+	_device_menu.position = pos
+	_device_menu.reset_size()
+	_device_menu.popup()
+
+func _on_device_menu_id_pressed(id: int) -> void:
+	if id < 0 or id >= _pending_devices.size():
+		return
+
+	var serial := String(_pending_devices[id].get("serial", ""))
+	if serial == "":
+		await logs.append_log("[color=red]Device selection failed.[/color]", "red")
+		return
+
+	await _run_on_phone_with_serial(_pending_run_name, _pending_run_desc, serial)
+
+func _run_on_phone_with_serial(name: String, description: String, device_serial: String) -> void:
 	if not _has_android_device:
+		# Optional extra guard; enumeration already checked above.
 		await logs.append_log(
 			"[color=orange]No Android device detected via adb.[/color]",
 			"orange"
@@ -170,7 +224,8 @@ func _on_run_on_phone(name: String, description: String) -> void:
 		logs,
 		_username,
 		name,
-		description
+		description,
+		device_serial
 	)
 
 	if ok:
@@ -179,6 +234,7 @@ func _on_run_on_phone(name: String, description: String) -> void:
 		await logs.append_log("[color=red]Failed to launch on device.[/color]", "red")
 
 	publish_form.set_enabled(true)
+
 
 # === Published List Handlers ===
 func _on_copy_link(prime_id: String) -> void:
