@@ -17,6 +17,11 @@ var _ui_enabled: bool = true
 var _device_available: bool = false
 
 func _ready() -> void:
+	
+	desc_edit.custom_minimum_size = PrimesUIScaler.v2(0, 80)
+	publish_btn.custom_minimum_size = PrimesUIScaler.v2(140, 0)
+	run_on_phone_btn.custom_minimum_size = PrimesUIScaler.v2(160, 0)
+	
 	publish_btn.pressed.connect(_on_publish_pressed)
 	run_on_phone_btn.pressed.connect(_on_run_on_phone_pressed)
 	desc_edit.text_changed.connect(_on_desc_text_changed)

@@ -1,15 +1,13 @@
-[gd_scene load_steps=12 format=3 uid="uid://dbn4peoxs5qjg"]
+[gd_scene load_steps=10 format=4]
 
-[ext_resource type="Script" uid="uid://b7xe5agcja04x" path="res://addons/primes/panel.gd" id="1_ph1id"]
-[ext_resource type="Texture2D" uid="uid://cli7h6ec24gaq" path="res://addons/primes/drawables/person.svg" id="2_person"]
-[ext_resource type="Texture2D" uid="uid://cay8qjk6l16pn" path="res://addons/primes/drawables/logout.svg" id="3_logout"]
-[ext_resource type="Script" uid="uid://cdtx2mvm6hosn" path="res://addons/primes/ui/author_section.gd" id="4_author"]
-[ext_resource type="Script" uid="uid://br4g7yceka20u" path="res://addons/primes/ui/published_list.gd" id="5_published_list"]
-[ext_resource type="Script" uid="uid://d2y73txwiqwro" path="res://addons/primes/ui/publish_form.gd" id="6_publish_form"]
-[ext_resource type="Script" uid="uid://11ui3nuo387y" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
-[ext_resource type="Script" uid="uid://g0joyhntmo3u" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
-[ext_resource type="Script" uid="uid://df3173x463ulk" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
-[ext_resource type="Script" uid="uid://fbq4y4wrldes" path="res://addons/primes/ui/flags_dialog.gd" id="10_lhi0s"]
+[ext_resource type="Script" path="res://addons/primes/panel.gd" id="1_ph1id"]
+[ext_resource type="Script" path="res://addons/primes/ui/author_section.gd" id="4_author"]
+[ext_resource type="Script" path="res://addons/primes/ui/published_list.gd" id="5_published_list"]
+[ext_resource type="Script" path="res://addons/primes/ui/publish_form.gd" id="6_publish_form"]
+[ext_resource type="Script" path="res://addons/primes/ui/logs_area.gd" id="7_logs"]
+[ext_resource type="Script" path="res://addons/primes/ui/sign_in_view.gd" id="8_sign_in"]
+[ext_resource type="Script" path="res://addons/primes/ui/edit_prime_dialog.gd" id="9_edit"]
+[ext_resource type="Script" path="res://addons/primes/ui/flags_dialog.gd" id="10_lhi0s"]
 
 [sub_resource type="StyleBoxEmpty" id="SB_EMPTY"]
 
@@ -31,7 +29,6 @@ ok_button_text = "Update"
 script = ExtResource("9_edit")
 
 [node name="EditVBox" type="VBoxContainer" parent="Root/EditDialog"]
-custom_minimum_size = Vector2(500, 0)
 theme_override_constants/separation = 8
 
 [node name="NameGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
@@ -56,7 +53,6 @@ layout_mode = 2
 text = "Description"
 
 [node name="DescEdit" type="TextEdit" parent="Root/EditDialog/EditVBox/DescGroup"]
-custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 wrap_mode = 1
@@ -79,20 +75,11 @@ script = ExtResource("4_author")
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_vertical = 4
-texture = ExtResource("2_person")
-stretch_mode = 4
+stretch_mode = 3
 
-[node name="AuthorValue" type="RichTextLabel" parent="Root/Stack/Publish/AuthorRow"]
+[node name="AuthorValue" type="Label" parent="Root/Stack/Publish/AuthorRow"]
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_override_styles/focus = SubResource("SB_EMPTY")
 theme_override_styles/normal = SubResource("SB_EMPTY")
-bbcode_enabled = true
-text = "[font_size=18][b]ole-luk-oie[/b]"
-fit_content = true
-scroll_active = false
-autowrap_mode = 0
 
 [node name="LogoutBtn" type="Button" parent="Root/Stack/Publish/AuthorRow"]
 modulate = Color(1, 1, 1, 0.8)
@@ -104,11 +91,9 @@ mouse_default_cursor_shape = 2
 theme_override_styles/hover = SubResource("SB_EMPTY")
 theme_override_styles/pressed = SubResource("SB_EMPTY")
 theme_override_styles/normal = SubResource("SB_EMPTY")
-icon = ExtResource("3_logout")
 flat = true
 
 [node name="PublishedScroll" type="ScrollContainer" parent="Root/Stack/Publish"]
-custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
@@ -133,7 +118,6 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="LeftLine" type="HSeparator" parent="Root/Stack/Publish/DividerContainer/DividerRow"]
-custom_minimum_size = Vector2(155, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 
@@ -158,7 +142,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="FormInner" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow"]
-custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 8
@@ -186,7 +169,6 @@ layout_mode = 2
 text = "Description (optional)"
 
 [node name="Desc" type="TextEdit" parent="Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup"]
-custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
@@ -202,13 +184,12 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
 [node name="RunOnPhoneBtn" type="Button" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
-custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-tooltip_text = "Run current project on connected Android device"
-text = "Run in the app"
+tooltip_text = "No Android device detected via adb"
+disabled = true
+text = "Run in app"
 
 [node name="PublishBtn" type="Button" parent="Root/Stack/Publish/Form/CenterRow/FormInner/ActionArea"]
-custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Publish"
 
@@ -219,7 +200,6 @@ tooltip_text = "If checked, your project won't appear in users' feeds. It can on
 text = "Hide from feed"
 
 [node name="SpacerBottom" type="Control" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
-custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="SignInWrapper" type="Control" parent="Root/Stack"]
@@ -228,7 +208,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="SignIn" type="VBoxContainer" parent="Root/Stack/SignInWrapper"]
-layout_mode = 2
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -247,7 +227,6 @@ layout_mode = 2
 text = "Enter email:"
 
 [node name="Email" type="LineEdit" parent="Root/Stack/SignInWrapper/SignIn"]
-custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 placeholder_text = "you@example.com"
@@ -262,13 +241,11 @@ alignment = 2
 
 [node name="BackBtn" type="Button" parent="Root/Stack/SignInWrapper/SignIn/SignInRow"]
 visible = false
-custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Back"
 
 [node name="SignInBtn" type="Button" parent="Root/Stack/SignInWrapper/SignIn/SignInRow"]
-custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Send code"
@@ -280,7 +257,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="Initializing" type="VBoxContainer" parent="Root/Stack/InitializingWrapper"]
-layout_mode = 2
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -298,7 +275,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Log" type="RichTextLabel" parent="Root"]
-custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 size_flags_vertical = 0
 focus_mode = 2
@@ -311,10 +287,9 @@ script = ExtResource("7_logs")
 [node name="FlagsDialog" type="AcceptDialog" parent="Root"]
 title = "Flags for TEST_PRIME"
 position = Vector2i(0, 36)
-size = Vector2i(56, 74)
+size = Vector2i(56, 80)
 ok_button_text = "Close"
 script = ExtResource("10_lhi0s")
-metadata/_custom_type_script = "uid://fbq4y4wrldes"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Root/FlagsDialog"]
 offset_left = 8.0

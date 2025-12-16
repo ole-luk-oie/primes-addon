@@ -18,10 +18,11 @@ func _exit_tree() -> void:
 	if is_instance_valid(panel):
 		panel.queue_free()
 
-
+func _get_plugin_icon() -> Texture2D:
+	return PrimesUIScaler.icon("res://addons/primes/drawables/icon.svg")
+	
 # --- Main Screen hooks (this creates the button next to 2D/3D/Script/AssetLib) ---
 func _get_plugin_name() -> String: return "Primes"
-func _get_plugin_icon() -> Texture2D: return preload("res://addons/primes/drawables/icon.svg")
 func _has_main_screen() -> bool: return true
 func _make_visible(visible: bool) -> void:
 	if not is_instance_valid(panel): return

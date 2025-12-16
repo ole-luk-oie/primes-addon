@@ -27,6 +27,8 @@ func _ready() -> void:
 	ROW_BG_LIGHT.draw_center = true
 	
 	list_container.add_theme_constant_override("separation", 0)
+	
+	custom_minimum_size = PrimesUIScaler.v2(0.0, 240.0)
 
 func update_list(items: Array) -> void:
 	for c in list_container.get_children():
@@ -48,7 +50,7 @@ func update_list(items: Array) -> void:
 func _create_row_panel(index: int) -> PanelContainer:
 	var row_panel := PanelContainer.new()
 	row_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row_panel.custom_minimum_size = Vector2(0, 40)
+	row_panel.custom_minimum_size = Vector2(0, PrimesUIScaler.px(40))
 	row_panel.add_theme_stylebox_override(
 		"panel",
 		ROW_BG_DARK if index % 2 == 1 else ROW_BG_LIGHT
@@ -58,7 +60,7 @@ func _create_row_panel(index: int) -> PanelContainer:
 func _populate_prime_row(row_panel: PanelContainer, meta: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", int(PrimesUIScaler.px(8)))
 	row_panel.add_child(row)
 	
 	var desc_val = meta.get("description")
@@ -134,7 +136,8 @@ func _create_link_button(prime_id: String) -> Button:
 	var btn := Button.new()
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
-	btn.icon = preload("res://addons/primes/drawables/link.svg")
+	btn.icon = PrimesUIScaler.icon("res://addons/primes/drawables/link.svg")
+	btn.expand_icon = false
 	
 	var normal_col = Color(1, 1, 1, 0.8)
 	var hover_col = Color(1, 1, 1, 1.0)

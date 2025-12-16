@@ -13,6 +13,7 @@ var exporter: PrimesExporter = PrimesExporter.new()
 @onready var author_section: AuthorSection = $Root/Stack/Publish/AuthorRow
 @onready var published_list: PublishedList = $Root/Stack/Publish/PublishedScroll
 @onready var publish_form: PublishForm = $Root/Stack/Publish/Form
+@onready var publish_divider_label: Label = $Root/Stack/Publish/DividerContainer/DividerRow/DividerLabel
 @onready var logs: LogsArea = $Root/Log
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
@@ -29,8 +30,15 @@ var _username: String = ""
 var _initialized = false
 
 func _ready() -> void:
+	_apply_hidpi()
 	# Setup component dependencies
 	sign_in_view.setup(exporter, logs)
+	
+	var theme := EditorInterface.get_editor_theme()
+	publish_divider_label.add_theme_font_override("font", theme.get_font("bold", "EditorFonts"))
+	publish_divider_label.add_theme_font_size_override("font_size",
+		theme.get_font_size("main_size", "EditorFonts")
+	)
 	
 	# Connect signals
 	sign_in_view.sign_in_completed.connect(_on_sign_in_completed)
@@ -74,6 +82,31 @@ func ensure_correct_subview():
 				return
 	
 	_show_sign_in()
+
+func _apply_hidpi() -> void:
+	var s := PrimesUIScaler.scale()
+
+	$Root/EditDialog/EditVBox.custom_minimum_size.x = PrimesUIScaler.px(500)
+	$Root/EditDialog/EditVBox/DescGroup/DescEdit.custom_minimum_size.y = PrimesUIScaler.px(80)
+	$Root/Stack/Publish/Form/CenterRow/FormInner.custom_minimum_size.x = PrimesUIScaler.px(500)
+
+	$Root/Stack/Publish/PublishedScroll.custom_minimum_size.y = PrimesUIScaler.px(120)
+	$Root/Stack/Publish/DividerContainer/DividerRow/LeftLine.custom_minimum_size.x = PrimesUIScaler.px(150)
+	$Root/Log.custom_minimum_size.y = PrimesUIScaler.px(160)
+
+	$Root/Stack/SignInWrapper/SignIn/Email.custom_minimum_size = PrimesUIScaler.v2(250, 0)
+
+	var sign_in := $Root/Stack/SignInWrapper/SignIn
+	sign_in.offset_left   = -PrimesUIScaler.px(125)
+	sign_in.offset_right  =  PrimesUIScaler.px(125)
+	sign_in.offset_top    = -PrimesUIScaler.px(60)
+	sign_in.offset_bottom =  PrimesUIScaler.px(60)
+
+	var init := $Root/Stack/InitializingWrapper/Initializing
+	init.offset_left   = -PrimesUIScaler.px(100)
+	init.offset_right  =  PrimesUIScaler.px(100)
+	init.offset_top    = -PrimesUIScaler.px(20)
+	init.offset_bottom =  PrimesUIScaler.px(20)
 
 func _show_initializing() -> void:
 	initializing_wrapper.visible = true
@@ -329,7 +362,7 @@ func _on_delete_prime(prime_id: String, name: String) -> void:
 		"This removes the cloud copy from the catalog and feed. " +\
 		"Your local Godot project stays unchanged.\n\n"
 
-	dlg.min_size = Vector2(420, 100)
+	dlg.min_size = PrimesUIScaler.v2(420, 100)
 
 		# Center the text in the dialog
 	var lbl := dlg.get_label() # AcceptDialog / ConfirmationDialog exposes this
