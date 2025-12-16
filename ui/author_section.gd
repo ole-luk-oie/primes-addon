@@ -17,7 +17,7 @@ func _ready() -> void:
 	var theme := EditorInterface.get_editor_theme()
 	author_value.add_theme_font_override("font", theme.get_font("bold", "EditorFonts"))
 	author_value.add_theme_font_size_override("font_size",
-		theme.get_font_size("main_size", "EditorFonts")
+		theme.get_font_size("main_size", "EditorFonts") * 1.3
 	)
 	
 	author_icon.texture = PrimesUIScaler.icon("res://addons/primes/drawables/person.svg")
