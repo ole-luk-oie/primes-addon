@@ -8,17 +8,18 @@ signal appeal_submitted(prime_id: String, flag_id: int, message: String)
 @onready var _list_container: VBoxContainer = $VBoxContainer/ScrollContainer/FlagsList
 
 var _prime_id: String = ""
-var _flag_rows := {} # flag_id -> { vbox, header, appeal_row, appeal_btn, appeal_input }
+var _flag_rows := {}  # flag_id -> { vbox, header, appeal_row, appeal_btn, appeal_input }
+
 
 func _ready() -> void:
-	
 	var ok := get_ok_button()
 	if ok:
 		ok.text = "Close"
-	
+
 	if _root_vbox:
 		_root_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_root_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
 
 func show_flags(prime_id: String, prime_name: String, flags: Array) -> void:
 	_prime_id = prime_id
@@ -156,16 +157,18 @@ func _add_flag_row(flag_data: Dictionary) -> void:
 		"appeal_input": appeal_input,
 	}
 
-	appeal_btn.pressed.connect(func():
-		var msg := String(appeal_input.text).strip_edges()
-		# Locally lock UI while request is in flight
-		appeal_btn.disabled = true
-		appeal_input.editable = false
-		appeal_submitted.emit(_prime_id, flag_id, msg)
+	appeal_btn.pressed.connect(
+		func():
+			var msg := String(appeal_input.text).strip_edges()
+			# Locally lock UI while request is in flight
+			appeal_btn.disabled = true
+			appeal_input.editable = false
+			appeal_submitted.emit(_prime_id, flag_id, msg)
 	)
-	
+
 	_list_container.add_child(panel)
-	
+
+
 func set_appeal_enabled(flag_id: int, enabled: bool) -> void:
 	if not _flag_rows.has(flag_id):
 		return

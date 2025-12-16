@@ -2,16 +2,20 @@
 extends RefCounted
 class_name PrimesUIScaler
 
-static var _icon_cache: Dictionary = {} # key -> Texture2D
+static var _icon_cache: Dictionary = {}  # key -> Texture2D
+
 
 static func scale() -> float:
 	return EditorInterface.get_base_control().get_theme_default_base_scale()
 
+
 static func px(v: float) -> float:
 	return v * scale()
 
+
 static func v2(x: float, y: float) -> Vector2:
 	return Vector2(px(x), px(y))
+
 
 # --- Icons (SVG rasterization with optical compensation) ---
 static func _pick_icon_px(logical_px: int) -> int:
@@ -22,6 +26,7 @@ static func _pick_icon_px(logical_px: int) -> int:
 	if s >= 1.75:
 		return int(round(logical_px * 2.0))
 	return logical_px
+
 
 static func icon(svg_path: String, logical_px: int = 24) -> Texture2D:
 	var px_size := _pick_icon_px(logical_px)

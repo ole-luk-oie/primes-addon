@@ -1,8 +1,8 @@
 extends Object
 class_name Packager
 
-const PLUGIN_DIR              := "res://addons/primes"
-const EXPORT_PRESET_PLATFORM  := "Web"
+const PLUGIN_DIR := "res://addons/primes"
+const EXPORT_PRESET_PLATFORM := "Web"
 const EXPORT_PRESET_PREFERRED := "Primes (Web)"
 
 var TMP_ROOT := OS.get_user_data_dir() + "/primes_export_tmp"
@@ -16,14 +16,11 @@ func pack_zip() -> Dictionary:
 	var rec_lock_path := OS.get_user_data_dir().path_join(".recovery_mode_lock")
 	var rec_lock_preexisting := FileAccess.file_exists(rec_lock_path)
 	# ------------------------------------------
-	
+
 	# 1) Make a temp copy of the project (no editor data, no plugin)
 	var tmp_proj := _make_temp_copy(src_proj)
 	if tmp_proj == "":
-		return {
-			"success": false,
-			"error": "Failed to create temp copy for export"
-		}
+		return {"success": false, "error": "Failed to create temp copy for export"}
 
 	# 2) Ensure a Web export preset exists in the *temp* project only
 	var preset_name := _ensure_temp_web_preset(tmp_proj)
@@ -31,45 +28,44 @@ func pack_zip() -> Dictionary:
 		return {
 			"success": false,
 			"error":
+			(
 				"Could not create a temporary Web export preset.\n\n"
 				+ "Please ensure Web export templates are installed in your Godot editor\n"
 				+ "via Editor → Manage Export Templates, then try again."
+			)
 		}
 
 	# 3) Export pack using headless Godot on the temp project
 	var tmp_out := tmp_proj.path_join("export.zip")
 
-	var args := [
-		"--headless",
-		"--path", tmp_proj,
-		"--export-pack", preset_name, tmp_out
-	]
+	var args := ["--headless", "--path", tmp_proj, "--export-pack", preset_name, tmp_out]
 	var exit_code := OS.execute(exe, args, [], true, false)
-	
-		# --- Clear recovery lock if this export created it ---
+
+	# --- Clear recovery lock if this export created it ---
 	if not rec_lock_preexisting and FileAccess.file_exists(rec_lock_path):
 		DirAccess.remove_absolute(rec_lock_path)
 	# -----------------------------------------------------
-	
+
 	if exit_code != 0:
 		_cleanup_temp_for_path(tmp_out)
 		return {
 			"success": false,
 			"error":
+			(
 				"Export failed (exit code %d).\n\n"
 				+ "Most likely the Web export template is not installed or the\n"
-				+ "'%s' preset in the temporary project is misconfigured."
-				% [exit_code, EXPORT_PRESET_PREFERRED]
+				+ (
+					"'%s' preset in the temporary project is misconfigured."
+					% [exit_code, EXPORT_PRESET_PREFERRED]
+				)
+			)
 		}
 
-	return {
-		"success": true,
-		"zip_path": tmp_out,
-		"preset_name": preset_name
-	}
+	return {"success": true, "zip_path": tmp_out, "preset_name": preset_name}
 
 
 # === Create/ensure Web preset in TMP PROJECT only ===
+
 
 func _ensure_temp_web_preset(tmp_proj_abs: String) -> String:
 	var cfg := ConfigFile.new()
@@ -130,7 +126,9 @@ func _ensure_temp_web_preset(tmp_proj_abs: String) -> String:
 	_write_web_preset_section(cfg, new_section, preset_name)
 	var save_err2 := cfg.save(cfg_path)
 	if save_err2 != OK:
-		push_warning("Failed to save temp export_presets.cfg after adding Web preset: %s" % save_err2)
+		push_warning(
+			"Failed to save temp export_presets.cfg after adding Web preset: %s" % save_err2
+		)
 		return ""
 
 	return preset_name
@@ -152,7 +150,9 @@ func _write_web_preset_section(cfg: ConfigFile, section: String, preset_name: St
 	cfg.set_value(opt_section, "custom_template/debug", "")
 	cfg.set_value(opt_section, "custom_template/release", "")
 
+
 # === Temp project copy / cleanup ===
+
 
 func _make_temp_copy(src_proj_abs: String) -> String:
 	var stamp := str(Time.get_unix_time_from_system())
@@ -161,15 +161,7 @@ func _make_temp_copy(src_proj_abs: String) -> String:
 		return ""
 
 	var ok := _copy_dir_recursive(
-		src_proj_abs,
-		tmp_base,
-		[
-			".git",
-			".godot",
-			".import",
-			"build",
-			"addons"            # we'll manually remove this plugin below
-		]
+		src_proj_abs, tmp_base, [".git", ".godot", ".import", "build", "addons"]  # we'll manually remove this plugin below
 	)
 	if not ok:
 		return ""

@@ -1,17 +1,17 @@
 extends Object
 class_name DevRunner
 
-const ANDROID_PACKAGE    := "com.olelukoie.primes"
-const ANDROID_ACTIVITY   := "com.olelukoie.primes.ui.MainActivity"
+const ANDROID_PACKAGE := "com.olelukoie.primes"
+const ANDROID_ACTIVITY := "com.olelukoie.primes.ui.MainActivity"
 
 const EXTRA_DEV_BUNDLE_PATH = "com.olelukoie.primes.EXTRA_DEV_BUNDLE_PATH"
-const EXTRA_DEV_ENGINE      = "com.olelukoie.primes.EXTRA_DEV_ENGINE"
-const EXTRA_DEV_ID          = "com.olelukoie.primes.EXTRA_DEV_ID"
-const EXTRA_DEV_AUTHOR      = "com.olelukoie.primes.EXTRA_DEV_AUTHOR"
-const EXTRA_DEV_NAME        = "com.olelukoie.primes.EXTRA_DEV_NAME"
-const EXTRA_DEV_DESC        = "com.olelukoie.primes.EXTRA_DEV_DESC"
+const EXTRA_DEV_ENGINE = "com.olelukoie.primes.EXTRA_DEV_ENGINE"
+const EXTRA_DEV_ID = "com.olelukoie.primes.EXTRA_DEV_ID"
+const EXTRA_DEV_AUTHOR = "com.olelukoie.primes.EXTRA_DEV_AUTHOR"
+const EXTRA_DEV_NAME = "com.olelukoie.primes.EXTRA_DEV_NAME"
+const EXTRA_DEV_DESC = "com.olelukoie.primes.EXTRA_DEV_DESC"
 
-const DEV_ID_SETTING        := "primes/dev_id"
+const DEV_ID_SETTING := "primes/dev_id"
 
 var _packager: Packager = Packager.new()
 var _uploader: Uploader = Uploader.new()
@@ -28,6 +28,7 @@ var _process_conn_id: int = -1
 var _active_device_serial: String = ""
 
 # --- Public API ---
+
 
 func list_android_devices() -> Array:
 	# Returns: [{ "serial": String, "label": String }]
@@ -71,17 +72,25 @@ func list_android_devices() -> Array:
 			model = "Android"
 
 		var label := "%s (%s)" % [model, serial]
-		devices.append({
-			"serial": serial,
-			"label": label,
-		})
+		(
+			devices
+			. append(
+				{
+					"serial": serial,
+					"label": label,
+				}
+			)
+		)
 
 	return devices
+
 
 func probe_android_device() -> bool:
 	return list_android_devices().size() > 0
 
+
 # --- Internal: adb helpers ---
+
 
 func _adb_getprop(serial: String, prop: String) -> String:
 	var out: Array = []
@@ -90,6 +99,7 @@ func _adb_getprop(serial: String, prop: String) -> String:
 	if code != 0 or out.is_empty():
 		return ""
 	return String(out[0]).strip_edges()
+
 
 func _is_app_installed(device_serial: String) -> bool:
 	var out: Array = []
@@ -109,6 +119,7 @@ func _is_app_installed(device_serial: String) -> bool:
 	var text := String(out[0])
 	return text.find("package:") != -1
 
+
 func run_dev_on_phone(
 	host: Node,
 	logs,
@@ -121,10 +132,7 @@ func run_dev_on_phone(
 	var devices := list_android_devices()
 
 	if devices.size() == 0:
-		await logs.append_log(
-			"[color=orange]No Android device detected via adb.[/color]",
-			"orange"
-		)
+		await logs.append_log("[color=orange]No Android device detected via adb.[/color]", "orange")
 		return false
 
 	var chosen_serial := String(device_serial).strip_edges()
@@ -133,10 +141,15 @@ func run_dev_on_phone(
 			chosen_serial = String(devices[0].get("serial", ""))
 		else:
 			chosen_serial = String(devices[0].get("serial", ""))
-			await logs.append_log(
-				"[color=orange]Multiple Android devices detected; selecting the first one: %s[/color]"
-				% String(devices[0].get("label", chosen_serial)),
-				"orange"
+			await (
+				logs
+				. append_log(
+					(
+						"[color=orange]Multiple Android devices detected; selecting the first one: %s[/color]"
+						% String(devices[0].get("label", chosen_serial))
+					),
+					"orange"
+				)
 			)
 
 	if chosen_serial == "":
@@ -147,8 +160,7 @@ func run_dev_on_phone(
 
 	if not _is_app_installed(_active_device_serial):
 		await logs.append_log(
-			"[color=orange]Primes app is not installed on the selected device.[/color]",
-			"orange"
+			"[color=orange]Primes app is not installed on the selected device.[/color]", "orange"
 		)
 		return false
 
@@ -158,8 +170,10 @@ func run_dev_on_phone(
 	var pack_result := _packager.pack_zip()
 	if not pack_result.get("success", false):
 		await logs.append_log(
-			"[color=red]Dev run failed to build package:[/color] %s"
-			% String(pack_result.get("error", "")),
+			(
+				"[color=red]Dev run failed to build package:[/color] %s"
+				% String(pack_result.get("error", ""))
+			),
 			"red"
 		)
 		return false
@@ -175,10 +189,9 @@ func run_dev_on_phone(
 
 	# 3) Set up adb reverse so device can reach computer's localhost
 	await logs.append_log("Setting up port forwarding...")
-	var reverse_args := PackedStringArray([
-		"-s", _active_device_serial,
-		"reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port
-	])
+	var reverse_args := PackedStringArray(
+		["-s", _active_device_serial, "reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port]
+	)
 	var reverse_code := OS.execute("adb", reverse_args, [], true, false)
 
 	if reverse_code != 0:
@@ -187,17 +200,19 @@ func run_dev_on_phone(
 		return false
 
 	# 4) Derive dev meta from form + project settings
-	var dev_name   := _get_dev_name(form_name)
-	var dev_id     := _get_or_create_dev_id(dev_name)
+	var dev_name := _get_dev_name(form_name)
+	var dev_id := _get_or_create_dev_id(dev_name)
 	var dev_author := _get_dev_author(username)
-	var dev_desc   := _get_dev_desc(form_desc)
+	var dev_desc := _get_dev_desc(form_desc)
 
 	var engine_result := _uploader.get_engine_string()
 	if not engine_result.get("success", false):
 		print(str(engine_result))
 		await logs.append_log(
-			"[color=red]Dev run aborted:[/color] %s"
-			% String(engine_result.get("error", "Unknown engine error")),
+			(
+				"[color=red]Dev run aborted:[/color] %s"
+				% String(engine_result.get("error", "Unknown engine error"))
+			),
 			"red"
 		)
 		_stop_http_server()
@@ -205,8 +220,7 @@ func run_dev_on_phone(
 	var dev_engine := String(engine_result.get("engine", ""))
 
 	await logs.append_log(
-		"Dev meta → id=[b]%s[/b], author=[b]%s[/b], name=[b]%s[/b]"
-		% [dev_id, dev_author, dev_name]
+		"Dev meta → id=[b]%s[/b], author=[b]%s[/b], name=[b]%s[/b]" % [dev_id, dev_author, dev_name]
 	)
 
 	# 5) Start activity with download URL
@@ -234,7 +248,9 @@ func run_dev_on_phone(
 
 	return ok
 
+
 # --- HTTP server ---
+
 
 func _start_http_server(file_path: String, host: Node) -> bool:
 	_server = TCPServer.new()
@@ -262,6 +278,7 @@ func _start_http_server(file_path: String, host: Node) -> bool:
 	print("HTTP server started on port %d" % _server_port)
 	return true
 
+
 func _stop_http_server() -> void:
 	_server_running = false
 
@@ -278,10 +295,9 @@ func _stop_http_server() -> void:
 	if _active_device_serial.strip_edges() != "":
 		OS.execute(
 			"adb",
-			PackedStringArray([
-				"-s", _active_device_serial,
-				"reverse", "--remove", "tcp:%d" % _server_port
-			]),
+			PackedStringArray(
+				["-s", _active_device_serial, "reverse", "--remove", "tcp:%d" % _server_port]
+			),
 			[],
 			true,
 			false
@@ -296,6 +312,7 @@ func _stop_http_server() -> void:
 			false
 		)
 
+
 func _process_http_server() -> void:
 	if not _server_running or not _server:
 		return
@@ -303,6 +320,7 @@ func _process_http_server() -> void:
 	if _server.is_connection_available():
 		var client := _server.take_connection()
 		_handle_http_client(client)
+
 
 func _handle_http_client(client: StreamPeerTCP) -> void:
 	var request := ""
@@ -334,7 +352,9 @@ func _handle_http_client(client: StreamPeerTCP) -> void:
 	OS.delay_msec(100)
 	client.disconnect_from_host()
 
+
 # --- adb launch ---
+
 
 func _start_dev_on_android(
 	logs,
@@ -350,42 +370,61 @@ func _start_dev_on_android(
 
 	var comp := "%s/%s" % [ANDROID_PACKAGE, ANDROID_ACTIVITY]
 
-	var am_args := PackedStringArray([
-		"-s", device_serial,
-		"shell", "am", "start",
-		"-n", comp,
-		"--es", EXTRA_DEV_BUNDLE_PATH, download_url,
-		"--es", EXTRA_DEV_ENGINE,      engine,
-		"--es", EXTRA_DEV_ID,          dev_id,
-		"--es", EXTRA_DEV_AUTHOR,      author,
-		"--es", EXTRA_DEV_NAME,        name,
-	])
+	var am_args := PackedStringArray(
+		[
+			"-s",
+			device_serial,
+			"shell",
+			"am",
+			"start",
+			"-n",
+			comp,
+			"--es",
+			EXTRA_DEV_BUNDLE_PATH,
+			download_url,
+			"--es",
+			EXTRA_DEV_ENGINE,
+			engine,
+			"--es",
+			EXTRA_DEV_ID,
+			dev_id,
+			"--es",
+			EXTRA_DEV_AUTHOR,
+			author,
+			"--es",
+			EXTRA_DEV_NAME,
+			name,
+		]
+	)
 
 	if desc.strip_edges() != "":
-		am_args.append_array([
-			"--es", EXTRA_DEV_DESC, desc
-		])
+		am_args.append_array(["--es", EXTRA_DEV_DESC, desc])
 
 	var am_out: Array = []
 	var am_code := OS.execute("adb", am_args, am_out, true, false)
 
 	if am_code != 0:
 		await logs.append_log(
-			"[color=red]adb shell am start failed (exit %d):[/color]\n[code]%s[/code]"
-			% [am_code, String(am_out[0]) if am_out.size() > 0 else ""],
+			(
+				"[color=red]adb shell am start failed (exit %d):[/color]\n[code]%s[/code]"
+				% [am_code, String(am_out[0]) if am_out.size() > 0 else ""]
+			),
 			"red"
 		)
 		return false
 
 	return true
 
+
 # --- Helpers: meta building ---
+
 
 func _get_dev_author(username: String) -> String:
 	var u := String(username)
 	if u != "":
 		return u
 	return "unknown-dev"
+
 
 func _get_dev_name(form_name: String) -> String:
 	var name := String(form_name).strip_edges()
@@ -399,6 +438,7 @@ func _get_dev_name(form_name: String) -> String:
 
 	return "Dev build"
 
+
 func _get_dev_desc(form_desc: String) -> String:
 	var desc := String(form_desc).strip_edges()
 	if desc != "":
@@ -411,6 +451,7 @@ func _get_dev_desc(form_desc: String) -> String:
 
 	return ""
 
+
 func _get_or_create_dev_id(dev_name: String) -> String:
 	if ProjectSettings.has_setting(DEV_ID_SETTING):
 		var existing := String(ProjectSettings.get_setting(DEV_ID_SETTING))
@@ -422,6 +463,7 @@ func _get_or_create_dev_id(dev_name: String) -> String:
 	ProjectSettings.save()
 
 	return fresh
+
 
 func _make_dev_id(name: String) -> String:
 	var slug := String(name).strip_edges().to_lower()
