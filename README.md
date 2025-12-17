@@ -79,20 +79,20 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 A few words on how the platform is intended to be used. These aren't rules, these are biases.  
 
 <details>
-<summary><strong>There is no "right" kind of project here.</strong></summary>
+<summary><strong>There is no "right" kind of project here</strong></summary>
 
 Primes is a place for *everything* - weird experiments, interactive explainers, 
 disturbing art, brainrot, and other things that don't fit anywhere else.
 </details>
 
 <details>
-<summary><strong>Fuck juice and polish.</strong></summary>
+<summary><strong>Fuck juice and polish</strong></summary>
 
 They don't make an idea better - unless they *are* the idea.
 </details>
 
 <details>
-<summary><strong>Get to the point quickly.</strong></summary>
+<summary><strong>Get to the point quickly</strong></summary>
 
 Primes is dynamic by nature.  
 Menus, settings, and long intros are often just friction.
@@ -100,7 +100,7 @@ Start where the thing *is*.
 </details>
 
 <details>
-<summary><strong>Reuse freely.</strong></summary>
+<summary><strong>Reuse freely</strong></summary>
 
 Assets, tools, ideas, whatever. 
 Anything that helps you express yourself is fair game - as long as you stay in the driver's seat.
@@ -108,10 +108,10 @@ But if it starts feeling dishonest, it probably is.
 </details>
 
 <details>
-<summary><strong>Ship, don't architect.</strong></summary>
+<summary><strong>Ship, don't architect</strong></summary>
 
 These are often one-shot projects.  
-Perfect code, ideal project structure - all that just burns time for nothing.
+Perfect code, ideal project structure - all that just burns time mostly for nothing.
 Unless learning is the goal.
 </details>
 
