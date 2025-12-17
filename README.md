@@ -107,14 +107,6 @@ Anything that helps you express yourself is fair game - as long as you stay in t
 But if it starts feeling dishonest, it probably is.
 </details>
 
-<details>
-<summary><strong>Ship, don't architect</strong></summary>
-
-These are often one-shot projects.  
-Perfect code, ideal project structure - all that just burns time mostly for nothing.
-Unless learning is the goal.
-</details>
-
 ---
 
 ## Other notes
