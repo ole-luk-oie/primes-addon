@@ -1,6 +1,6 @@
 @tool
-extends RichTextLabel
 class_name LogsArea
+extends RichTextLabel
 
 var _log_cleared := false
 

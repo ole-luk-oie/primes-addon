@@ -1,9 +1,24 @@
 @tool
-extends PanelContainer
 class_name CloudPublisherPanel
+extends PanelContainer
 
+# Dependencies
 var plugin: EditorPlugin
 var exporter: PrimesExporter = PrimesExporter.new()
+
+# adb stuff
+var _device_check_timer: Timer
+var _has_android_device := false
+var _device_menu: PopupMenu
+var _pending_run_name := ""
+var _pending_run_desc := ""
+var _pending_devices: Array = [] # [{serial, label}]
+
+# State
+var _token := ""
+var _username := ""
+var _initialized := false
+
 
 # UI Components
 @onready var stack: VBoxContainer = $Root/Stack
@@ -13,31 +28,18 @@ var exporter: PrimesExporter = PrimesExporter.new()
 @onready var author_section: AuthorSection = $Root/Stack/Publish/AuthorRow
 @onready var published_list: PublishedList = $Root/Stack/Publish/PublishedScroll
 @onready var publish_form: PublishForm = $Root/Stack/Publish/Form
-@onready
-var publish_divider_label: Label = $Root/Stack/Publish/DividerContainer/DividerRow/DividerLabel
+@onready var publish_divider_label: Label = (
+	$Root/Stack/Publish/DividerContainer/DividerRow/DividerLabel
+)
 @onready var logs: LogsArea = $Root/Log
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
 
-# adb stuff
-var _device_check_timer: Timer
-var _has_android_device: bool = false
-
-var _device_menu: PopupMenu
-var _pending_run_name: String = ""
-var _pending_run_desc: String = ""
-var _pending_devices: Array = []  # [{serial, label}]
-
-# State
-var _token: String = ""
-var _username: String = ""
-
-var _initialized = false
-
 
 func _ready() -> void:
 	_apply_hidpi()
+
 	# Setup component dependencies
 	sign_in_view.setup(exporter, logs)
 
@@ -400,37 +402,35 @@ func _update_primes() -> bool:
 
 	if info.get("success", false):
 		_username = String(info.get("username", ""))
-		if _username == "":
+		if _username.is_empty():
 			_username = "(unknown)"
 
 		author_section.set_username(_username)
 
-		var games = info.get("primes", [])
+		var games := info.get("primes", [])
 		if typeof(games) == TYPE_ARRAY:
 			published_list.update_list(games)
 		else:
 			published_list.update_list([])
 
 		return true
-	else:
-		var error = String(info.get("error", ""))
-		if error == "token_expired":
-			await logs.append_log(
-				"[color=orange]Session expired. Please sign in again.[/color]", "orange"
-			)
-			_token = ""
+
+	var error := String(info.get("error", ""))
+	if error == "token_expired":
+		await logs.append_log(
+			"[color=orange]Session expired. Please sign in again.[/color]", "orange"
+		)
+		_token = ""
+		if plugin:
 			plugin.clear_token()
-			_show_sign_in()
-			return false
-		else:
-			await (
-				logs
-				. append_log(
-					"[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]",
-					"orange"
-				)
-			)
-		return true
+		_show_sign_in()
+		return false
+
+	await logs.append_log(
+		"[color=orange]Failed to fetch user data. Updates may not be visible right away.[/color]",
+		"orange"
+	)
+	return true
 
 
 func _on_delete_prime(prime_id: String, name: String) -> void:

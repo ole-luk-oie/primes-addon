@@ -1,5 +1,5 @@
-extends Object
 class_name UserAPI
+extends Object
 
 const USER_INFO_URL = PrimesConfig.BASE_URL + "/dev/info"
 const PRIMES_SET_PUBLIC_URL = PrimesConfig.BASE_URL + "/dev/set-public"

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name PrimesUIScaler
+extends RefCounted
 
 static var _icon_cache: Dictionary = {}  # key -> Texture2D
 

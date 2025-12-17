@@ -1,16 +1,16 @@
 @tool
-extends AcceptDialog
 class_name EditPrimeDialog
+extends AcceptDialog
 
 signal update_requested(prime_id: String, prev_name: String, name: String, description: String)
 
 const DESC_MAX := 255
 
-@onready var edit_name_le: LineEdit = $EditVBox/NameGroup/NameEdit
-@onready var edit_desc_te: TextEdit = $EditVBox/DescGroup/DescEdit
-
 var _editing_prime_id: String = ""
 var _prev_name = ""
+
+@onready var edit_name_le: LineEdit = $EditVBox/NameGroup/NameEdit
+@onready var edit_desc_te: TextEdit = $EditVBox/DescGroup/DescEdit
 
 
 func _ready() -> void:

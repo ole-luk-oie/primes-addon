@@ -1,5 +1,5 @@
-extends Object
 class_name PrimesExporter
+extends Object
 
 const PLUGIN_DIR = "res://addons/primes"
 const STUB_NAME = "__primes_stub.gd"
@@ -22,7 +22,7 @@ class ExcludeSelfExportPlugin:
 	func _init(_plugin_dir: String) -> void:
 		plugin_dir = _plugin_dir.rstrip("/")
 
-	func _export_file(path: String, type: String, features: PackedStringArray) -> void:
+	func _export_file(path: String, _type: String, _features: PackedStringArray) -> void:
 		if path.begins_with(plugin_dir + "/") or path == plugin_dir or path.contains(STUB_NAME):
 			skip()
 

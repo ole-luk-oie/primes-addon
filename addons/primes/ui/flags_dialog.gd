@@ -1,14 +1,14 @@
 @tool
-extends AcceptDialog
 class_name FlagsDialog
+extends AcceptDialog
 
 signal appeal_submitted(prime_id: String, flag_id: int, message: String)
 
-@onready var _root_vbox: VBoxContainer = $VBoxContainer
-@onready var _list_container: VBoxContainer = $VBoxContainer/ScrollContainer/FlagsList
-
 var _prime_id: String = ""
 var _flag_rows := {}  # flag_id -> { vbox, header, appeal_row, appeal_btn, appeal_input }
+
+@onready var _root_vbox: VBoxContainer = $VBoxContainer
+@onready var _list_container: VBoxContainer = $VBoxContainer/ScrollContainer/FlagsList
 
 
 func _ready() -> void:
@@ -91,7 +91,8 @@ func _add_flag_row(flag_data: Dictionary) -> void:
 		info.fit_content = true
 		info.scroll_active = false
 		info.autowrap_mode = TextServer.AutowrapMode.AUTOWRAP_WORD
-		info.text = "[i]Crash flags cannot be appealed. Please upload a fixed version and the system will stop flagging new crashes.[/i]"
+		info.text = "[i]Crash flags cannot be appealed. " + \
+			"Please upload a fixed version and the system will stop flagging new crashes.[/i]"
 		vbox.add_child(info)
 		_list_container.add_child(panel)
 		return

@@ -1,6 +1,6 @@
 @tool
-extends ScrollContainer
 class_name PublishedList
+extends ScrollContainer
 
 signal copy_link_requested(prime_id: String)
 signal toggle_visibility_requested(prime_id: String, name: String, is_public: bool)
@@ -8,24 +8,24 @@ signal edit_prime_requested(prime_id: String, prev_name: String, name: String, d
 signal flag_details_requested(prime_id: String, prime_name: String)
 signal delete_prime_requested(prime_id: String, name: String)
 
-@onready var list_container: VBoxContainer = $PublishedListContainer
+var row_bg_dark := StyleBoxFlat.new()
+var row_bg_light := StyleBoxFlat.new()
 
-var ROW_BG_DARK := StyleBoxFlat.new()
-var ROW_BG_LIGHT := StyleBoxFlat.new()
+@onready var list_container: VBoxContainer = $PublishedListContainer
 
 
 func _ready() -> void:
 	var theme := EditorInterface.get_editor_theme()
 
-	ROW_BG_DARK = StyleBoxFlat.new()
-	ROW_BG_DARK.bg_color = theme.get_color("dark_color_1", "Editor")
-	ROW_BG_DARK.set_content_margin_all(3)
-	ROW_BG_DARK.draw_center = true
+	row_bg_dark = StyleBoxFlat.new()
+	row_bg_dark.bg_color = theme.get_color("dark_color_1", "Editor")
+	row_bg_dark.set_content_margin_all(3)
+	row_bg_dark.draw_center = true
 
-	ROW_BG_LIGHT = StyleBoxFlat.new()
-	ROW_BG_LIGHT.bg_color = theme.get_color("dark_color_2", "Editor")
-	ROW_BG_LIGHT.set_content_margin_all(3)
-	ROW_BG_LIGHT.draw_center = true
+	row_bg_light = StyleBoxFlat.new()
+	row_bg_light.bg_color = theme.get_color("dark_color_2", "Editor")
+	row_bg_light.set_content_margin_all(3)
+	row_bg_light.draw_center = true
 
 	list_container.add_theme_constant_override("separation", 0)
 
@@ -54,7 +54,7 @@ func _create_row_panel(index: int) -> PanelContainer:
 	var row_panel := PanelContainer.new()
 	row_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_panel.custom_minimum_size = Vector2(0, PrimesUIScaler.px(40))
-	row_panel.add_theme_stylebox_override("panel", ROW_BG_DARK if index % 2 == 1 else ROW_BG_LIGHT)
+	row_panel.add_theme_stylebox_override("panel", row_bg_dark if index % 2 == 1 else row_bg_light)
 	return row_panel
 
 

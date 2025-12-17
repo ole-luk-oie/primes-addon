@@ -1,11 +1,11 @@
-extends Object
 class_name Packager
+extends Object
 
 const PLUGIN_DIR := "res://addons/primes"
 const EXPORT_PRESET_PLATFORM := "Web"
 const EXPORT_PRESET_PREFERRED := "Primes (Web)"
 
-var TMP_ROOT := OS.get_user_data_dir() + "/primes_export_tmp"
+var tmp_root := OS.get_user_data_dir() + "/primes_export_tmp"
 
 
 func pack_zip() -> Dictionary:
@@ -156,12 +156,12 @@ func _write_web_preset_section(cfg: ConfigFile, section: String, preset_name: St
 
 func _make_temp_copy(src_proj_abs: String) -> String:
 	var stamp := str(Time.get_unix_time_from_system())
-	var tmp_base := TMP_ROOT.path_join(stamp)
+	var tmp_base := tmp_root.path_join(stamp)
 	if DirAccess.make_dir_recursive_absolute(tmp_base) != OK:
 		return ""
 
 	var ok := _copy_dir_recursive(
-		src_proj_abs, tmp_base, [".git", ".godot", ".import", "build", "addons"]  # we'll manually remove this plugin below
+		src_proj_abs, tmp_base, [".git", ".godot", ".import", "build", "addons"]
 	)
 	if not ok:
 		return ""
@@ -225,7 +225,7 @@ func cleanup_temp(zip_path: String) -> void:
 
 func _cleanup_temp_for_path(zip_abs: String) -> void:
 	var base := zip_abs.get_base_dir()
-	if base.begins_with(TMP_ROOT):
+	if base.begins_with(tmp_root):
 		_delete_dir_recursive(base)
 
 

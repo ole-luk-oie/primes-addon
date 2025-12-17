@@ -1,16 +1,14 @@
 @tool
-extends HBoxContainer
 class_name AuthorSection
+extends HBoxContainer
 
 signal logout_requested
+
+var _name_font_px := 0
 
 @onready var author_icon: TextureRect = $AuthorIcon
 @onready var author_value: Label = $AuthorValue
 @onready var logout_btn: Button = $LogoutBtn
-
-var ROW_BG_EMPTY := StyleBoxEmpty.new()
-
-var _name_font_px := 0
 
 
 func _ready() -> void:

@@ -1,20 +1,20 @@
 @tool
-extends VBoxContainer
 class_name PublishForm
+extends VBoxContainer
 
 signal publish_requested(name: String, description: String, hide_from_feed: bool)
 signal run_on_phone_requested(name: String, description: String)
 
 const DESC_MAX := 255
 
+var _ui_enabled: bool = true
+var _device_available: bool = false
+
 @onready var name_edit: LineEdit = $CenterRow/FormInner/NameGroup/Name
 @onready var desc_edit: TextEdit = $CenterRow/FormInner/DescGroup/Desc
 @onready var hide_cb: CheckBox = $CenterRow/FormInner/ActionArea/HideFromFeed
 @onready var publish_btn: Button = $CenterRow/FormInner/ActionArea/PublishBtn
 @onready var run_on_phone_btn: Button = $CenterRow/FormInner/ActionArea/RunOnPhoneBtn
-
-var _ui_enabled: bool = true
-var _device_available: bool = false
 
 
 func _ready() -> void:

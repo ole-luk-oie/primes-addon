@@ -1,5 +1,5 @@
-extends Object
 class_name AuthAPI
+extends Object
 
 const AUTH_EMAIL_START_URL = PrimesConfig.BASE_URL + "/auth/email/start"
 const AUTH_EMAIL_VERIFY_URL = PrimesConfig.BASE_URL + "/auth/email/verify"

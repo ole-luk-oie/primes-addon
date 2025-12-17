@@ -1,17 +1,12 @@
 @tool
-extends Control
 class_name SignInView
+extends Control
 
 signal sign_in_completed(token: String, username: String)
 
 const AUTH_STEP_EMAIL := 0
 const AUTH_STEP_CODE := 1
 const AUTH_STEP_USERNAME := 2
-
-@onready var sign_label: Label = $EmailL
-@onready var email_le: LineEdit = $Email
-@onready var sign_in_btn: Button = $SignInRow/SignInBtn
-@onready var back_btn: Button = $SignInRow/BackBtn
 
 var _auth_step: int = AUTH_STEP_EMAIL
 var _current_email: String = ""
@@ -22,6 +17,11 @@ var _token: String = ""
 
 var _exporter: PrimesExporter
 var _logs: LogsArea
+
+@onready var sign_label: Label = $EmailL
+@onready var email_le: LineEdit = $Email
+@onready var sign_in_btn: Button = $SignInRow/SignInBtn
+@onready var back_btn: Button = $SignInRow/BackBtn
 
 
 func setup(exporter: PrimesExporter, logs: LogsArea) -> void:
@@ -54,7 +54,7 @@ func reset() -> void:
 	email_le.grab_focus()
 
 
-func _on_text_submitted(new_text: String) -> void:
+func _on_text_submitted(_new_text: String) -> void:
 	if sign_in_btn.disabled:
 		return
 

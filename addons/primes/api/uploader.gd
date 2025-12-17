@@ -1,5 +1,5 @@
-extends Object
 class_name Uploader
+extends Object
 
 const UPLOAD_URL = PrimesConfig.BASE_URL + "/dev/upload"
 
@@ -61,15 +61,15 @@ func upload_zip(
 
 	if result[0] == HTTPRequest.RESULT_SUCCESS and result[1] == 200:
 		return {"success": true, "id": (result[3] as PackedByteArray).get_string_from_utf8()}
-	else:
-		return {
-			"success": false,
-			"error":
-			(
-				"Upload failed with result %s, status %s, body %s"
-				% [result[0], result[1], result[3].get_string_from_utf8()]
-			)
-		}
+
+	return {
+		"success": false,
+		"error":
+		(
+			"Upload failed with result %s, status %s, body %s"
+			% [result[0], result[1], result[3].get_string_from_utf8()]
+		)
+	}
 
 
 func get_engine_string() -> Dictionary:
@@ -90,7 +90,8 @@ func _get_engine_string() -> Dictionary:
 			return {
 				"success": false,
 				"error":
-				"Mobile renderer is not supported yet, we're working on it. Meanwhile please switch to Compatibility"
+				"Mobile renderer is not supported yet, we're working on it. " + \
+					"Meanwhile please switch to Compatibility"
 			}
 		_:
 			return {

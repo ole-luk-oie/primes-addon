@@ -1,5 +1,5 @@
-extends Object
 class_name DevRunner
+extends Object
 
 const ANDROID_PACKAGE := "com.olelukoie.primes"
 const ANDROID_ACTIVITY := "com.olelukoie.primes.ui.MainActivity"
