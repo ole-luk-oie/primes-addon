@@ -74,7 +74,7 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 
 ---
 
-## Creative guidance (philosophy)
+## How to approach Primes
 
 A few words on how the platform is intended to be used. These aren't rules, these are biases.  
 
