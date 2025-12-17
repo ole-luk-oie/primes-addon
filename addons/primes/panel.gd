@@ -12,13 +12,12 @@ var _has_android_device := false
 var _device_menu: PopupMenu
 var _pending_run_name := ""
 var _pending_run_desc := ""
-var _pending_devices: Array = [] # [{serial, label}]
+var _pending_devices: Array = []  # [{serial, label}]
 
 # State
 var _token := ""
 var _username := ""
 var _initialized := false
-
 
 # UI Components
 @onready var stack: VBoxContainer = $Root/Stack
@@ -28,9 +27,7 @@ var _initialized := false
 @onready var author_section: AuthorSection = $Root/Stack/Publish/AuthorRow
 @onready var published_list: PublishedList = $Root/Stack/Publish/PublishedScroll
 @onready var publish_form: PublishForm = $Root/Stack/Publish/Form
-@onready var publish_divider_label: Label = (
-	$Root/Stack/Publish/DividerContainer/DividerRow/DividerLabel
-)
+@onready var publish_divider_label: Label = $Root/Stack/Publish/DividerContainer/DividerRow/DividerLabel
 @onready var logs: LogsArea = $Root/Log
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog

@@ -91,8 +91,10 @@ func _add_flag_row(flag_data: Dictionary) -> void:
 		info.fit_content = true
 		info.scroll_active = false
 		info.autowrap_mode = TextServer.AutowrapMode.AUTOWRAP_WORD
-		info.text = "[i]Crash flags cannot be appealed. " + \
-			"Please upload a fixed version and the system will stop flagging new crashes.[/i]"
+		info.text = (
+			"[i]Crash flags cannot be appealed. "
+			+ "Please upload a fixed version and the system will stop flagging new crashes.[/i]"
+		)
 		vbox.add_child(info)
 		_list_container.add_child(panel)
 		return

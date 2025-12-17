@@ -90,8 +90,10 @@ func _get_engine_string() -> Dictionary:
 			return {
 				"success": false,
 				"error":
-				"Mobile renderer is not supported yet, we're working on it. " + \
-					"Meanwhile please switch to Compatibility"
+				(
+					"Mobile renderer is not supported yet, we're working on it. "
+					+ "Meanwhile please switch to Compatibility"
+				)
 			}
 		_:
 			return {
