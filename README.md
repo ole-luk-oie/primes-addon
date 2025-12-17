@@ -86,12 +86,6 @@ disturbing art, brainrot, and other things that don't fit anywhere else.
 </details>
 
 <details>
-<summary><strong>Fuck juice and polish</strong></summary>
-
-They don't make an idea better - unless they *are* the idea.
-</details>
-
-<details>
 <summary><strong>Get to the point quickly</strong></summary>
 
 Primes is dynamic by nature.  
@@ -105,6 +99,14 @@ Start where the thing *is*.
 Assets, tools, ideas, whatever. 
 Anything that helps you express yourself is fair game - as long as you stay in the driver's seat.
 But if it starts feeling dishonest, it probably is.
+</details>
+
+
+<details>
+<summary><strong>Don't bother with juice</strong></summary>
+
+If you don't want to. 
+It doesn't make an idea better - unless it *is* the idea.
 </details>
 
 ---
