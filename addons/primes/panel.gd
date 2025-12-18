@@ -79,6 +79,8 @@ func _ready() -> void:
 	# Initialize view
 	ensure_correct_subview()
 
+	_check_adb_available()
+
 
 func ensure_correct_subview():
 	if plugin:
@@ -551,3 +553,23 @@ func pack_and_upload(
 	exporter.cleanup_temp(zip_path)
 
 	return upload_result
+
+func _check_adb_available() -> void:
+	# Try to run `adb version`
+	var output := []
+	var exit_code := OS.execute(
+		"adbcd",
+		["version"],
+		output,
+		true,   # read stdout
+		false   # don't block editor
+	)
+
+	if exit_code != 0:
+		await logs.append_log(
+			"[color=orange]To run projects on a connected Android phone, please install adb:[/color]\n"
+			+ "[url=https://developer.android.com/tools/adb]"
+			+ "https://developer.android.com/tools/adb"
+			+ "[/url]",
+			"orange"
+		)
