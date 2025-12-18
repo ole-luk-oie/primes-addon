@@ -107,7 +107,7 @@ And if it starts feeling dishonest, it probably is.
 <summary><strong>Skip the juice</strong></summary>
 
 If you want. 
-It doesn't make an idea better - unless it *is* the idea.
+Juice doesn't make an idea better - unless it *is* the idea.
 </details>
 
 ---
