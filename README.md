@@ -43,8 +43,6 @@ Using this plugin, you also can:
 - Only an **Android app** is available at the moment  
   *(iOS is in development)*
 
----
-
 ### Execution environment restrictions
 
 To keep the platform safe and predictable, published projects run in a restricted environment.
@@ -56,21 +54,20 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 
 ---
 
-## Technical notes (important)
+## Dev notes
 
 - The platform targets **mobile portrait mode**  
   - Landscape projects will show large black margins  
   - If you must use landscape keep the portrait in settings and clearly signal to the user to rotate their phone
 
-- Audio considerations:
-  - Avoid heavy audio effect chains - they can cause stutter
-  - Initialize audio early (e.g. play with 0 volume)
-  - Syncing visuals to audio is hard on the web:
-    - Pauses and stutters can desync playback
-    - Prefer querying the audio playback position every frame and driving visuals from that value, rather than assuming uninterrupted playback
-  - Avoid the built-in audio synthesizer:
-    - It currently underperforms in web exports
-    - This will improve once native mobile rendering is supported
+- The aspect ratio in the app is roughly **1:2**  
+  You can set the viewport size to something like **1000×2000** pixels for development
+
+- When sizing things on screen, avoid absolute pixel values  
+  Prefer ratios of width and height instead
+
+- Read [this](https://docs.godotengine.org/en/latest/tutorials/export/exporting_for_web.html) document to understand the limitations of web exports  
+  With one simplification: you don't need to worry about supporting multiple browsers
 
 ---
 
@@ -98,14 +95,14 @@ Start where the thing *is*.
 
 Assets, tools, ideas, whatever. 
 Anything that helps you express yourself is fair game - as long as you stay in the driver's seat.
-But if it starts feeling dishonest, it probably is.
+And if it starts feeling dishonest, it probably is.
 </details>
 
 
 <details>
-<summary><strong>Don't bother with juice</strong></summary>
+<summary><strong>Skip the juice</strong></summary>
 
-If you don't want to. 
+If you want. 
 It doesn't make an idea better - unless it *is* the idea.
 </details>
 
