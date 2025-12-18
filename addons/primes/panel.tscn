@@ -146,6 +146,25 @@ layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 8
 
+[node name="RightArea" type="CenterContainer" parent="Root/Stack/Publish/Form/CenterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ToSBox" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/RightArea"]
+layout_mode = 2
+custom_minimum_size = Vector2(260, 0)
+theme_override_constants/separation = 6
+
+[node name="ToSNotice" type="RichTextLabel" parent="Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+autowrap_mode = 2
+mouse_filter = 0
+theme_override_styles/normal = SubResource("SB_EMPTY")
+text = "[center][b]By clicking Publish, you agree to the[/b]\n[url=https://ole-luk-oie.com/primes-tos/]Terms of Service[/url].\n\nYou keep ownership of your projects and assets.\nPrimes only receives a limited license to store and display your work.[/center]"
+
 [node name="NameGroup" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
 layout_mode = 2
 theme_override_constants/separation = 0

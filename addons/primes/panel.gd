@@ -32,10 +32,18 @@ var _initialized := false
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
+@onready var tos_notice: RichTextLabel = $Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox/ToSNotice
+
 
 
 func _ready() -> void:
 	_apply_hidpi()
+
+	tos_notice.add_theme_font_size_override("normal_font_size", 12)
+	tos_notice.modulate = Color(1, 1, 1, 0.7)
+	tos_notice.meta_clicked.connect(func(meta):
+		OS.shell_open(str(meta))
+	)
 
 	# Setup component dependencies
 	sign_in_view.setup(exporter, logs)
