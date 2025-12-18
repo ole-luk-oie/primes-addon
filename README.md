@@ -4,6 +4,9 @@ This is a companion editor plugin for the **Primes** platform that allows easy p
 
 Primes is focused on lightweight, expressive projects that can be browsed and played in a mobile app, TikTok-style.
 
+**Primes Android app:**  
+https://play.google.com/store/apps/details?id=com.olelukoie.primes
+
 ---
 
 ## How to use (assuming the plugin is installed and enabled)
@@ -24,7 +27,8 @@ See the [Terms of Service](https://ole-luk-oie.com/primes-tos/) for details.*
 Using this plugin, you also can:
 
 - Add a name and/or description to your project (both optional)
-- Run your project in the app on a connected Android phone with one click (no templates or presets needed)
+- Run your project in the app on a connected Android phone with one click 
+  *(no templates or presets needed, but requires [adb](https://developer.android.com/tools/adb) to be installed and available in PATH)*
 - See a list of your already published projects
 - Edit metadata or delete published projects
 - View crash flags and user reports, and submit appeals
