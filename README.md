@@ -27,7 +27,7 @@ See the [Terms of Service](https://ole-luk-oie.com/primes-tos/) for details.*
 Using this plugin, you also can:
 
 - Add a name and/or description to your project (both optional)
-- Run your project in the app on a connected Android phone with one click 
+- Run your project in the app on a connected Android phone with one click  
   *(no templates or presets needed, but requires [adb](https://developer.android.com/tools/adb) to be installed and available in PATH)*
 - See a list of your already published projects
 - Edit metadata or delete published projects
