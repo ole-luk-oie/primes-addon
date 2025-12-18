@@ -9,6 +9,15 @@ var tmp_root := OS.get_user_data_dir() + "/primes_export_tmp"
 
 
 func pack_zip() -> Dictionary:
+
+	# --- Check for restricted API -------------
+	var scan := RestrictedAPIChecker.scan_project("res://")
+	if not scan["ok"]:
+		return {
+			"success": false,
+			"error": _format_restricted_api_error(scan["findings"])
+		}
+
 	var exe := OS.get_executable_path()
 	var src_proj := ProjectSettings.globalize_path("res://")
 
@@ -246,3 +255,22 @@ func _delete_dir_recursive(path_abs: String) -> void:
 		fn = d.get_next()
 	d.list_dir_end()
 	DirAccess.remove_absolute(path_abs)
+
+func _format_restricted_api_error(findings: Array) -> String:
+	var max_show := 20
+	var msg := "Unsupported APIs detected in project scripts:\n\n"
+
+	for i in range(min(findings.size(), max_show)):
+		var f := findings[i]
+		msg += "- %s:%d  %s  (%s)\n" % [
+			String(f["file"]),
+			int(f["line"]),
+			String(f["match"]),
+			String(f["preview"])
+		]
+
+	if findings.size() > max_show:
+		msg += "\n...and %d more.\n" % (findings.size() - max_show)
+
+	msg += "\nRemove these usages before publishing."
+	return msg
