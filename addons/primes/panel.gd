@@ -558,7 +558,7 @@ func _check_adb_available() -> void:
 	# Try to run `adb version`
 	var output := []
 	var exit_code := OS.execute(
-		"adbcd",
+		"adb",
 		["version"],
 		output,
 		true,   # read stdout
