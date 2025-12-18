@@ -261,7 +261,7 @@ func _format_restricted_api_error(findings: Array) -> String:
 	var msg := "Unsupported APIs detected in project scripts:\n\n"
 
 	for i in range(min(findings.size(), max_show)):
-		var f := findings[i]
+		var f = findings[i]
 		msg += "- %s:%d  %s  (%s)\n" % [
 			String(f["file"]),
 			int(f["line"]),

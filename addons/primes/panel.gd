@@ -532,10 +532,6 @@ func pack_and_upload(
 	# Pack
 	var pack_result := exporter.pack_zip()
 	if not pack_result.get("success", false):
-		await logs.append_log(
-			"[color=red]Failed to build package:[/color] %s" % String(pack_result.get("error", "")),
-			"red"
-		)
 		return pack_result
 
 	var zip_path: String = pack_result.get("zip_path", "")
