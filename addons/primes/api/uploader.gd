@@ -43,16 +43,46 @@ func upload_zip(host: Node, token: String, zip_path: String, is_public := false,
 	if typeof(init_body) != TYPE_DICTIONARY:
 		return {"success": false, "error": "Init returned non-object JSON"}
 
-	if not init_body.has("id") or not init_body.has("uploadUrl"):
-		# Future: if you later return an "upload" object instead, handle it here.
-		return {"success": false, "error": "Init response missing id/uploadUrl: %s" % str(init_body)}
+	if not init_body.has("id"):
+		return {"success": false, "error": "Init response missing id"}
+
+	var upload_spec := {}
+	if init_body.has("upload"):
+		upload_spec = init_body["upload"]
+	elif init_body.has("uploadUrl"):
+		# backward-compatible: treat as PUT
+		upload_spec = {
+			"method": "PUT",
+			"url": init_body["uploadUrl"],
+			"headers": init_body.get("requiredHeaders", {})
+		}
+	else:
+		return {"success": false, "error": "Init response missing upload info"}
 
 	var id: String = str(init_body["id"])
 	var upload_url: String = str(init_body["uploadUrl"])
 	var required_headers: Dictionary = init_body.get("requiredHeaders", {})
 
 	# 2) upload to uploadUrl
-	var upload_ok := await _upload_put_raw(host, upload_url, required_headers, file_buf)
+	var upload_ok := {}
+	match String(upload_spec.get("method", "")).to_upper():
+		"PUT":
+			upload_ok = await _upload_put_raw(
+				host,
+				upload_spec["url"],
+				upload_spec.get("headers", {}),
+				file_buf
+			)
+		"POST":
+			upload_ok = await _upload_post_multipart(
+				host,
+				upload_spec["url"],
+				upload_spec.get("fields", {}),
+				file_buf
+			)
+		_:
+			return {"success": false, "error": "Unsupported upload method"}
+
 	if not upload_ok.success:
 		return upload_ok
 
@@ -140,6 +170,60 @@ func _upload_put_raw(host: Node, url: String, required_headers: Dictionary, byte
 		return {"success": true}
 
 	return {"success": false, "error": "Upload failed: HTTP %s: %s" % [res_code, text]}
+
+func _upload_post_multipart(
+	host: Node,
+	url: String,
+	fields: Dictionary,
+	bytes: PackedByteArray
+) -> Dictionary:
+	var boundary := "----PrimesBoundary" + str(Time.get_unix_time_from_system())
+
+	var body := PackedByteArray()
+
+	# Add all form fields first (S3 requires exact order tolerance)
+	for k in fields.keys():
+		body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
+		body.append_array(
+			('Content-Disposition: form-data; name="%s"\r\n\r\n' % k).to_utf8_buffer()
+		)
+		body.append_array(String(fields[k]).to_utf8_buffer())
+		body.append_array("\r\n".to_utf8_buffer())
+
+	# File part (S3 requires name="file")
+	body.append_array(("--%s\r\n" % boundary).to_utf8_buffer())
+	body.append_array(
+		'Content-Disposition: form-data; name="file"; filename="upload.zip"\r\n'.to_utf8_buffer()
+	)
+	body.append_array("Content-Type: application/zip\r\n\r\n".to_utf8_buffer())
+	body.append_array(bytes)
+	body.append_array("\r\n".to_utf8_buffer())
+
+	body.append_array(("--%s--\r\n" % boundary).to_utf8_buffer())
+
+	var headers := PackedStringArray()
+	headers.append("Content-Type: multipart/form-data; boundary=%s" % boundary)
+
+	var http := HTTPRequest.new()
+	http.use_threads = true
+	host.add_child(http)
+
+	var err := http.request_raw(url, headers, HTTPClient.METHOD_POST, body)
+	if err != OK:
+		http.queue_free()
+		return {"success": false, "error": "POST upload failed to initiate: %s" % err}
+
+	var result = await http.request_completed
+	http.queue_free()
+
+	var code : int = result[1]
+	var text : String = result[3].get_string_from_utf8()
+
+	# S3 returns 204 or 201 on success
+	if code == 204 or code == 201 or (code >= 200 and code < 300):
+		return {"success": true}
+
+	return {"success": false, "error": "POST upload failed: HTTP %d: %s" % [code, text]}
 
 
 # ---- File + SHA helpers ----
