@@ -32,14 +32,20 @@ var _initialized := false
 @onready var edit_dialog: EditPrimeDialog = $Root/EditDialog
 @onready var flags_dialog: FlagsDialog = $Root/FlagsDialog
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
+@onready var tos_box: VBoxContainer = $Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox
 @onready var tos_notice: RichTextLabel = $Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox/ToSNotice
-
-
 
 func _ready() -> void:
 	_apply_hidpi()
 
-	tos_notice.add_theme_font_size_override("normal_font_size", 12)
+	tos_box.custom_minimum_size.x = PrimesUIScaler.px(260)
+
+	var s := PrimesUIScaler.px(12)
+	tos_notice.add_theme_font_size_override(&"normal_font_size", s)
+	tos_notice.add_theme_font_size_override(&"bold_font_size", s)
+	tos_notice.add_theme_font_size_override(&"italics_font_size", s)
+	tos_notice.add_theme_font_size_override(&"bold_italics_font_size", s)
+
 	tos_notice.modulate = Color(1, 1, 1, 0.7)
 	tos_notice.meta_clicked.connect(func(meta):
 		OS.shell_open(str(meta))
