@@ -70,6 +70,22 @@ func pack_zip() -> Dictionary:
 			)
 		}
 
+	var zip_size := _file_size_bytes(tmp_out)
+	if zip_size < 0:
+		_cleanup_temp_for_path(tmp_out)
+		return {"success": false, "error": "Failed to read exported zip size"}
+
+	if zip_size > PrimesConfig.MAX_ZIP_BYTES:
+		_cleanup_temp_for_path(tmp_out)
+		return {
+			"success": false,
+			"error":
+			(
+				"Exported zip is too large: %.2f MB (max %.2f MB).\n\n"
+				+ "Try reducing assets (textures/audio), removing unused files, or compressing content."
+			) % [zip_size / 1048576.0, PrimesConfig.MAX_ZIP_BYTES / 1048576.0]
+		}
+
 	return {"success": true, "zip_path": tmp_out, "preset_name": preset_name}
 
 
@@ -274,3 +290,11 @@ func _format_restricted_api_error(findings: Array) -> String:
 
 	msg += "\nRemove these usages before publishing."
 	return msg
+	
+func _file_size_bytes(path_abs: String) -> int:
+	var f := FileAccess.open(path_abs, FileAccess.READ)
+	if f == null:
+		return -1
+	var n := f.get_length()
+	f.close()
+	return int(n)

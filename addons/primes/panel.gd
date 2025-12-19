@@ -251,7 +251,7 @@ func _run_on_phone_with_serial(name: String, description: String, device_serial:
 
 # === Published List Handlers ===
 func _on_copy_link(prime_id: String) -> void:
-	var link := "https://ole-luk-oie.com/primes/i?id=" + prime_id
+	var link := PrimesConfig.BASE_SHARE_URL + prime_id
 	DisplayServer.clipboard_set(link)
 	await logs.append_log("Link copied to the clipboard: [b]" + link + "[/b]")
 
@@ -517,7 +517,7 @@ func _on_publish(name: String, description: String, hide_from_feed: bool) -> voi
 			"[color=red]Failed to publish:[/color] %s" % String(result.get("error", "")), "red"
 		)
 	else:
-		var link: String = "https://ole-luk-oie.com/primes/i?id=" + String(result["id"])
+		var link: String = PrimesConfig.BASE_SHARE_URL + String(result["id"])
 		DisplayServer.clipboard_set(link)
 		await logs.append_log(
 			(

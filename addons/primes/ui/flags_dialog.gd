@@ -47,8 +47,6 @@ func _add_flag_row(flag_data: Dictionary) -> void:
 	if not _list_container:
 		return
 
-	print(str(flag_data))
-
 	var flag_id: int = int(flag_data.get("id", 0))
 	var reason := String(flag_data.get("reason", ""))
 	var status := String(flag_data.get("status", ""))
