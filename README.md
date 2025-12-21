@@ -68,7 +68,7 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 - The aspect ratio in the app is roughly **1:2**
   - setting viewport size to something like 1024x2048 (Project Settings -> Window -> Size) and 
   - locking a fixed ration (Project Settings -> Window -> Strech -> Aspect = keep)   
-  Simplifies layout and avoids the complexity of supporting many different screen sizes 
+Simplifies layout and avoids the complexity of supporting many different screen sizes 
 
 - When sizing things on screen, avoid absolute pixel values  
   Prefer ratios of viewport's width and height instead
