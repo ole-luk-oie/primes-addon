@@ -62,13 +62,12 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 
 ## Dev notes
 
-- The platform targets **mobile portrait mode**  
-  - Landscape projects will show large black margins  
-  - If you must use landscape keep the portrait in settings and clearly signal to the user to rotate their phone
+- The platform targets **mobile portrait mode** - landscape projects will show large black margins  
+  If you must use landscape keep the portrait in settings and clearly signal to the user to rotate their phone
 
 - The aspect ratio in the app is roughly **1:2**
-  - Setting viewport size to something like 1024x2048 (Project Settings -> Window -> Size) and 
-  - Locking a fixed ration (Project Settings -> Window -> Strech -> Aspect = keep) 
+  - setting viewport size to something like 1024x2048 (Project Settings -> Window -> Size) and 
+  - locking a fixed ration (Project Settings -> Window -> Strech -> Aspect = keep)   
   Simplifies layout and avoids the complexity of supporting many different screen sizes 
 
 - When sizing things on screen, avoid absolute pixel values  
