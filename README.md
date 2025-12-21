@@ -66,8 +66,10 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
   - Landscape projects will show large black margins  
   - If you must use landscape keep the portrait in settings and clearly signal to the user to rotate their phone
 
-- The aspect ratio in the app is roughly **1:2**  
-  You can set the viewport size to something like **1000×2000** pixels for development
+- The aspect ratio in the app is roughly **1:2**
+  - Setting viewport size to something like 1024x2048 (Project Settings -> Window -> Size) and 
+  - Locking a fixed ration (Project Settings -> Window -> Strech -> Aspect = keep) 
+  Simplifies layout and avoids the complexity of supporting many different screen sizes 
 
 - When sizing things on screen, avoid absolute pixel values  
   Prefer ratios of viewport's width and height instead
@@ -79,28 +81,24 @@ Only pure Godot projects using **GDScript** and built-in engine features are sup
 
 ## How to approach Primes
 
-A few words on how the platform is intended to be used. These aren't rules, these are biases.  
-
-<details>
-<summary><strong>There is no "right" kind of project here</strong></summary>
-
 Primes is a place for *everything* - weird experiments, interactive explainers, 
 disturbing art, brainrot, and other things that don't fit anywhere else.
-</details>
+
+Some guiding biases for using the platform.
 
 <details>
 <summary><strong>Get to the point quickly</strong></summary>
 
 Primes is dynamic by nature.  
-Menus, settings, and long intros are often just friction.
+Menus, settings, and long intros are often just friction.  
 Start where the thing *is*.
 </details>
 
 <details>
 <summary><strong>Reuse freely</strong></summary>
 
-Assets, tools, ideas, whatever. 
-Anything that is legal and helps you express yourself is fair game - just don't let it in the driver's seat.
+Assets, tools, ideas, whatever.  
+Anything that is legal and helps you express yourself is fair game - just don't let it in the driver's seat.  
 And if it starts feeling dishonest, it probably is.
 </details>
 
@@ -108,7 +106,7 @@ And if it starts feeling dishonest, it probably is.
 <details>
 <summary><strong>Skip the juice</strong></summary>
 
-If you want. 
+If you want.  
 Juice doesn't make an idea better - unless it *is* the idea.
 </details>
 
