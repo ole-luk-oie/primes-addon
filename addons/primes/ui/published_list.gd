@@ -207,7 +207,7 @@ func _create_edit_button(prime_id: String, name: String, desc: String) -> Button
 	var btn := Button.new()
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.icon = EditorInterface.get_editor_theme().get_icon("Edit", "EditorIcons")
-	btn.tooltip_text = "Edit name and description"
+	btn.tooltip_text = "Edit description"
 	btn.flat = true
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.pressed.connect(func(): edit_prime_requested.emit(prime_id, name, desc))

@@ -113,16 +113,18 @@ func ensure_correct_subview():
 
 func _apply_hidpi() -> void:
 	var s := PrimesUIScaler.scale()
+	
+	$Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup/Desc.custom_minimum_size.y = PrimesUIScaler.px(76)
 
 	$Root/EditDialog/EditVBox.custom_minimum_size.x = PrimesUIScaler.px(500)
-	$Root/EditDialog/EditVBox/DescGroup/DescEdit.custom_minimum_size.y = PrimesUIScaler.px(80)
+	$Root/EditDialog/EditVBox/DescGroup/DescEdit.custom_minimum_size.y = PrimesUIScaler.px(76)
 	$Root/Stack/Publish/Form/CenterRow/FormInner.custom_minimum_size.x = PrimesUIScaler.px(500)
 
 	$Root/Stack/Publish/PublishedScroll.custom_minimum_size.y = PrimesUIScaler.px(120)
 	$Root/Stack/Publish/DividerContainer/DividerRow/LeftLine.custom_minimum_size.x = (
 		PrimesUIScaler.px(150)
 	)
-	$Root/Log.custom_minimum_size.y = PrimesUIScaler.px(160)
+	$Root/Log.custom_minimum_size.y = PrimesUIScaler.px(124)
 
 	$Root/Stack/SignInWrapper/SignIn/Email.custom_minimum_size = PrimesUIScaler.v2(250, 0)
 

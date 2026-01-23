@@ -10,7 +10,6 @@ const DESC_MAX := 255
 var _ui_enabled: bool = true
 var _device_available: bool = false
 
-@onready var name_edit: LineEdit = $CenterRow/FormInner/NameGroup/Name
 @onready var desc_edit: TextEdit = $CenterRow/FormInner/DescGroup/Desc
 @onready var hide_cb: CheckBox = $CenterRow/FormInner/ActionArea/HideFromFeed
 @onready var publish_btn: Button = $CenterRow/FormInner/ActionArea/PublishBtn
@@ -25,22 +24,23 @@ func _ready() -> void:
 	publish_btn.pressed.connect(_on_publish_pressed)
 	run_on_phone_btn.pressed.connect(_on_run_on_phone_pressed)
 	desc_edit.text_changed.connect(_on_desc_text_changed)
-	name_edit.grab_focus()
+	desc_edit.grab_focus()
 
 
 func _on_run_on_phone_pressed() -> void:
-	var name := name_edit.text.strip_edges()
 	var desc := desc_edit.text.strip_edges()
-	run_on_phone_requested.emit(name, desc)
+	run_on_phone_requested.emit("", desc)
 
 
 func _on_publish_pressed() -> void:
-	var name := name_edit.text.strip_edges()
 	var desc := desc_edit.text.strip_edges()
 	var hide_from_feed := hide_cb.button_pressed
 
-	publish_requested.emit(name, desc, hide_from_feed)
+	publish_requested.emit("", desc, hide_from_feed)
 
+
+func get_description_text() -> String:
+	return desc_edit.text.strip_edges()
 
 func _on_desc_text_changed() -> void:
 	var t := desc_edit.text
@@ -84,6 +84,5 @@ func set_dev_run_available(available: bool) -> void:
 
 
 func clear_form() -> void:
-	name_edit.text = ""
 	desc_edit.text = ""
 	hide_cb.button_pressed = false

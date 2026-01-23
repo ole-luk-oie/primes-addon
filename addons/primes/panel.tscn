@@ -31,31 +31,16 @@ script = ExtResource("9_edit")
 [node name="EditVBox" type="VBoxContainer" parent="Root/EditDialog"]
 theme_override_constants/separation = 8
 
-[node name="NameGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="NameLabel" type="Label" parent="Root/EditDialog/EditVBox/NameGroup"]
-layout_mode = 2
-text = "Name"
-
-[node name="NameEdit" type="LineEdit" parent="Root/EditDialog/EditVBox/NameGroup"]
-layout_mode = 2
-size_flags_horizontal = 3
-max_length = 32
-
 [node name="DescGroup" type="VBoxContainer" parent="Root/EditDialog/EditVBox"]
 layout_mode = 2
 theme_override_constants/separation = 0
-
-[node name="DescLabel" type="Label" parent="Root/EditDialog/EditVBox/DescGroup"]
-layout_mode = 2
-text = "Description"
 
 [node name="DescEdit" type="TextEdit" parent="Root/EditDialog/EditVBox/DescGroup"]
 layout_mode = 2
 size_flags_horizontal = 3
 wrap_mode = 1
+placeholder_text = "Comment / description (optional)"
+custom_minimum_size = Vector2(0, 72)
 
 [node name="Stack" type="VBoxContainer" parent="Root"]
 layout_mode = 2
@@ -163,35 +148,18 @@ fit_content = true
 autowrap_mode = 2
 mouse_filter = 0
 theme_override_styles/normal = SubResource("SB_EMPTY")
-text = "[center][b]By clicking Publish, you agree to the[/b]\n[url=https://ole-luk-oie.com/primes-tos/]Terms of Service[/url].\n\nYou keep ownership of your projects and assets.\nPrimes only receives a limited license to store and display your work.[/center]"
-
-[node name="NameGroup" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="NameLabel" type="Label" parent="Root/Stack/Publish/Form/CenterRow/FormInner/NameGroup"]
-layout_mode = 2
-text = "Name (optional)"
-
-[node name="Name" type="LineEdit" parent="Root/Stack/Publish/Form/CenterRow/FormInner/NameGroup"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "If left blank the sequence number will be used (e.g. “#7”)"
-max_length = 36
+text = "[center][b]By clicking Publish, you agree to the[/b]\n[url=https://primes-app.com/tos/]Terms of Service[/url].\n\nYou keep ownership of your projects and assets.\nPrimes only receives a limited license to store and display your work.[/center]"
 
 [node name="DescGroup" type="VBoxContainer" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="DescLabel" type="Label" parent="Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup"]
-layout_mode = 2
-text = "Description (optional)"
-
 [node name="Desc" type="TextEdit" parent="Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
 wrap_mode = 1
+placeholder_text = "Comment / description (optional)"
+custom_minimum_size = Vector2(0, 72)
 
 [node name="SpacerTop" type="Control" parent="Root/Stack/Publish/Form/CenterRow/FormInner"]
 custom_minimum_size = Vector2(0, 1)
