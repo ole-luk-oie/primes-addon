@@ -3,7 +3,6 @@ class_name PublishForm
 extends VBoxContainer
 
 signal publish_requested(name: String, description: String, hide_from_feed: bool)
-signal run_on_phone_requested(name: String, description: String)
 
 const DESC_MAX := 255
 
@@ -22,25 +21,23 @@ func _ready() -> void:
 	run_on_phone_btn.custom_minimum_size = PrimesUIScaler.v2(160, 0)
 
 	publish_btn.pressed.connect(_on_publish_pressed)
-	run_on_phone_btn.pressed.connect(_on_run_on_phone_pressed)
 	desc_edit.text_changed.connect(_on_desc_text_changed)
 	desc_edit.grab_focus()
 
 
-func _on_run_on_phone_pressed() -> void:
-	var desc := desc_edit.text.strip_edges()
-	run_on_phone_requested.emit("", desc)
+func get_run_button() -> Button:
+	return run_on_phone_btn
 
 
 func _on_publish_pressed() -> void:
 	var desc := desc_edit.text.strip_edges()
 	var hide_from_feed := hide_cb.button_pressed
-
 	publish_requested.emit("", desc, hide_from_feed)
 
 
 func get_description_text() -> String:
 	return desc_edit.text.strip_edges()
+
 
 func _on_desc_text_changed() -> void:
 	var t := desc_edit.text
@@ -56,31 +53,25 @@ func _on_desc_text_changed() -> void:
 		desc_edit.set_caret_column(col)
 
 
-func _refresh_buttons() -> void:
+func _refresh_ui_state() -> void:
 	# Publish depends only on “UI busy” state.
 	publish_btn.disabled = not _ui_enabled
 
-	# Run on phone depends on both: UI must be enabled AND a device present.
-	var dev_enabled := _ui_enabled and _device_available
-	run_on_phone_btn.disabled = not dev_enabled
+	# Other inputs follow UI enabled state.
+	desc_edit.editable = _ui_enabled
+	hide_cb.disabled = not _ui_enabled
 
-	if dev_enabled:
-		run_on_phone_btn.tooltip_text = "Run current project on connected Android device"
-	elif _device_available:
-		# Shouldn’t really happen, but just in case
-		run_on_phone_btn.tooltip_text = "UI is busy"
-	else:
-		run_on_phone_btn.tooltip_text = "No Android device detected via adb"
+	# Run button is controlled by CloudPublisherPanel (shared with toolbar button).
 
 
 func set_enabled(enabled: bool) -> void:
 	_ui_enabled = enabled
-	_refresh_buttons()
+	_refresh_ui_state()
 
 
 func set_dev_run_available(available: bool) -> void:
+	# Kept for compatibility with existing calls; run button state is managed by the panel.
 	_device_available = available
-	_refresh_buttons()
 
 
 func clear_form() -> void:

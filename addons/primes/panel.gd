@@ -14,6 +14,10 @@ var _pending_run_name := ""
 var _pending_run_desc := ""
 var _pending_devices: Array = []  # [{serial, label}]
 
+# Shared "Run on phone" UI state
+var _ui_busy := false
+var _run_buttons: Array[BaseButton] = []  # toolbar button + publish_form button
+
 # State
 var _token := ""
 var _username := ""
@@ -34,6 +38,7 @@ var _initialized := false
 @onready var initializing_wrapper: Control = $Root/Stack/InitializingWrapper
 @onready var tos_box: VBoxContainer = $Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox
 @onready var tos_notice: RichTextLabel = $Root/Stack/Publish/Form/CenterRow/RightArea/ToSBox/ToSNotice
+
 
 func _ready() -> void:
 	_apply_hidpi()
@@ -71,7 +76,6 @@ func _ready() -> void:
 	published_list.delete_prime_requested.connect(_on_delete_prime)
 
 	publish_form.publish_requested.connect(_on_publish)
-	publish_form.run_on_phone_requested.connect(_on_run_on_phone)
 
 	edit_dialog.update_requested.connect(_on_update_prime_meta)
 
@@ -81,6 +85,9 @@ func _ready() -> void:
 	_device_menu = PopupMenu.new()
 	add_child(_device_menu)
 	_device_menu.id_pressed.connect(_on_device_menu_id_pressed)
+
+	# Register the in-panel button so it shares behavior with toolbar button
+	register_run_button(publish_form.get_run_button())
 
 	# Start device polling (lightweight, every couple of seconds)
 	_device_check_timer = Timer.new()
@@ -94,6 +101,46 @@ func _ready() -> void:
 	ensure_correct_subview()
 
 	_check_adb_available()
+	_refresh_run_buttons()
+
+
+func register_run_button(btn: BaseButton) -> void:
+	if not is_instance_valid(btn):
+		return
+	if btn in _run_buttons:
+		return
+
+	_run_buttons.append(btn)
+	btn.pressed.connect(func(): _trigger_run_from_ui())
+	_refresh_run_buttons()
+
+
+func unregister_run_button(btn: BaseButton) -> void:
+	_run_buttons.erase(btn)
+
+
+func _trigger_run_from_ui() -> void:
+	var desc := ""
+	if publish_form:
+		desc = publish_form.get_description_text()
+	_on_run_on_phone("", desc)
+
+
+func _refresh_run_buttons() -> void:
+	var dev_enabled := (not _ui_busy) and _has_android_device
+
+	for btn in _run_buttons:
+		if not is_instance_valid(btn):
+			continue
+
+		btn.disabled = not dev_enabled
+
+		if dev_enabled:
+			btn.tooltip_text = "Run project in Primes app on connected Android device"
+		elif _ui_busy:
+			btn.tooltip_text = "UI is busy"
+		else:
+			btn.tooltip_text = "No Android device detected via adb"
 
 
 func ensure_correct_subview():
@@ -113,7 +160,7 @@ func ensure_correct_subview():
 
 func _apply_hidpi() -> void:
 	var s := PrimesUIScaler.scale()
-	
+
 	$Root/Stack/Publish/Form/CenterRow/FormInner/DescGroup/Desc.custom_minimum_size.y = PrimesUIScaler.px(76)
 
 	$Root/EditDialog/EditVBox.custom_minimum_size.x = PrimesUIScaler.px(500)
@@ -165,6 +212,7 @@ func _on_device_check_timeout() -> void:
 
 	_has_android_device = available
 	publish_form.set_dev_run_available(_has_android_device)
+	_refresh_run_buttons()
 
 
 # === Sign-In Handlers ===
@@ -239,14 +287,16 @@ func _on_device_menu_id_pressed(id: int) -> void:
 
 func _run_on_phone_with_serial(name: String, description: String, device_serial: String) -> void:
 	if not _has_android_device:
-		# Optional extra guard; enumeration already checked above.
 		await logs.append_log("[color=orange]No Android device detected via adb.[/color]", "orange")
 		return
+
+	_ui_busy = true
+	_refresh_run_buttons()
 
 	publish_form.set_enabled(false)
 
 	var ok := await exporter.dev_run_on_phone(
-		self, logs, _username, name, description, device_serial
+		self, _username, name, description, device_serial
 	)
 
 	if ok:
@@ -255,6 +305,9 @@ func _run_on_phone_with_serial(name: String, description: String, device_serial:
 		await logs.append_log("[color=red]Failed to launch on device.[/color]", "red")
 
 	publish_form.set_enabled(true)
+
+	_ui_busy = false
+	_refresh_run_buttons()
 
 
 # === Published List Handlers ===
@@ -352,7 +405,6 @@ func _on_flag_details_requested(prime_id: String, prime_name: String) -> void:
 		return
 
 	var flags: Array = res.get("flags", [])
-
 	flags_dialog.show_flags(prime_id, prime_name, flags)
 
 
@@ -368,7 +420,6 @@ func _on_flag_appeal_submitted(prime_id: String, flag_id: int, message: String) 
 		await logs.append_log(
 			"[color=orange]Please enter a comment before appealing.[/color]", "orange"
 		)
-		# Re-enable UI if dialog had already disabled it
 		if flags_dialog:
 			flags_dialog.set_appeal_enabled(flag_id, true)
 		return
@@ -392,14 +443,12 @@ func _on_flag_appeal_submitted(prime_id: String, flag_id: int, message: String) 
 			_show_sign_in()
 			return
 
-		# Request failed → restore button / input so user can try again
 		if flags_dialog:
 			flags_dialog.set_appeal_enabled(flag_id, true)
 
 		await logs.append_log("[color=red]Failed to submit appeal:[/color] %s" % err, "red")
 		return
 
-	# Success → update the row UI to APPEALED state
 	if flags_dialog:
 		flags_dialog.mark_flag_appealed(flag_id)
 
@@ -455,7 +504,6 @@ func _on_delete_prime(prime_id: String, name: String) -> void:
 		)
 		return
 
-	# Confirmation dialog
 	var dlg := ConfirmationDialog.new()
 	dlg.title = "Delete from Primes"
 	dlg.dialog_text = (
@@ -466,14 +514,12 @@ func _on_delete_prime(prime_id: String, name: String) -> void:
 
 	dlg.min_size = PrimesUIScaler.v2(420, 100)
 
-	# Center the text in the dialog
-	var lbl := dlg.get_label()  # AcceptDialog / ConfirmationDialog exposes this
+	var lbl := dlg.get_label()
 	if lbl:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.autowrap_mode = TextServer.AutowrapMode.AUTOWRAP_WORD
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	# Optional: customize buttons
 	var ok_btn := dlg.get_ok_button()
 	if ok_btn:
 		ok_btn.text = "Delete"
@@ -488,7 +534,6 @@ func _on_delete_prime(prime_id: String, name: String) -> void:
 
 	dlg.confirmed.connect(
 		func():
-			# Run the async delete flow
 			await _perform_prime_delete(prime_id, name)
 			dlg.queue_free()
 	)
@@ -508,13 +553,15 @@ func _perform_prime_delete(prime_id: String, name: String) -> void:
 
 	await logs.append_log("[color=green]Deleted[/color] [b]%s[/b] from Primes." % name)
 
-	# Refresh list so the row disappears
 	await _update_primes()
 
 
 # === Publish Handlers ===
 func _on_publish(name: String, description: String, hide_from_feed: bool) -> void:
 	var is_public: bool = not hide_from_feed
+
+	_ui_busy = true
+	_refresh_run_buttons()
 
 	publish_form.set_enabled(false)
 
@@ -537,6 +584,9 @@ func _on_publish(name: String, description: String, hide_from_feed: bool) -> voi
 
 	publish_form.set_enabled(true)
 
+	_ui_busy = false
+	_refresh_run_buttons()
+
 	await _update_primes()
 
 
@@ -545,7 +595,6 @@ func pack_and_upload(
 ) -> Dictionary:
 	await logs.append_log("Packing project...")
 
-	# Pack
 	var pack_result := exporter.pack_zip()
 	if not pack_result.get("success", false):
 		return pack_result
@@ -554,27 +603,25 @@ func pack_and_upload(
 
 	await logs.append_log("Uploading...")
 
-	# Upload
 	var upload_result := await exporter.upload_zip(
 		host, token, zip_path, is_public, name, description
 	)
 
 	await logs.append_log("Cleaning up...")
 
-	# Cleanup
 	exporter.cleanup_temp(zip_path)
 
 	return upload_result
 
+
 func _check_adb_available() -> void:
-	# Try to run `adb version`
 	var output := []
 	var exit_code := OS.execute(
 		"adb",
 		["version"],
 		output,
-		true,   # read stdout
-		false   # don't block editor
+		true,
+		false
 	)
 
 	if exit_code != 0:

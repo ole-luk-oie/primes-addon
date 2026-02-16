@@ -1,5 +1,9 @@
+# dev_runner.gd
+@tool
 class_name DevRunner
 extends Object
+
+const LOG_PREFIX := "Primes: "
 
 const ANDROID_PACKAGE := "com.olelukoie.primes"
 const ANDROID_ACTIVITY := "com.olelukoie.primes.ui.MainActivity"
@@ -27,8 +31,8 @@ var _process_conn_id: int = -1
 # Device used for the current dev run session
 var _active_device_serial: String = ""
 
-# --- Public API ---
 
+# --- Public API ---
 
 func list_android_devices() -> Array:
 	# Returns: [{ "serial": String, "label": String }]
@@ -72,14 +76,11 @@ func list_android_devices() -> Array:
 			model = "Android"
 
 		var label := "%s (%s)" % [model, serial]
-		(
-			devices
-			. append(
-				{
-					"serial": serial,
-					"label": label,
-				}
-			)
+		devices.append(
+			{
+				"serial": serial,
+				"label": label,
+			}
 		)
 
 	return devices
@@ -89,8 +90,122 @@ func probe_android_device() -> bool:
 	return list_android_devices().size() > 0
 
 
-# --- Internal: adb helpers ---
+func run_dev_on_phone(
+	host: Node,
+	username: String,
+	form_name: String,
+	form_desc: String,
+	device_serial: String = ""
+) -> bool:
+	# Resolve device serial
+	var devices := list_android_devices()
 
+	if devices.size() == 0:
+		await _warn("No Android device detected via adb.")
+		return false
+
+	var chosen_serial := String(device_serial).strip_edges()
+	if chosen_serial == "":
+		if devices.size() == 1:
+			chosen_serial = String(devices[0].get("serial", ""))
+		else:
+			chosen_serial = String(devices[0].get("serial", ""))
+			await _warn(
+				"Multiple Android devices detected; selecting the first one: %s"
+				% String(devices[0].get("label", chosen_serial))
+			)
+
+	if chosen_serial == "":
+		await _err("No device selected.")
+		return false
+
+	_active_device_serial = chosen_serial
+
+	if not _is_app_installed(_active_device_serial):
+		await _warn("The app is not installed on the selected device (%s)." % _active_device_serial)
+		return false
+
+	await _log("Packing project for dev run on phone...")
+
+	# 1) Pack current project as web bundle
+	var pack_result := _packager.pack_zip()
+	if not pack_result.get("success", false):
+		await _err(
+			"Dev run failed to build package: %s"
+			% String(pack_result.get("error", ""))
+		)
+		return false
+
+	var zip_path: String = pack_result.get("zip_path", "")
+	await _log("Dev bundle built at: %s" % zip_path)
+
+	# 2) Start HTTP server on computer
+	await _log("Starting local HTTP server...")
+	if not await _start_http_server(zip_path, host):
+		await _err("Failed to start HTTP server.")
+		return false
+
+	# 3) Set up adb reverse so device can reach computer's localhost
+	await _log("Setting up port forwarding (adb reverse)...")
+	var reverse_args := PackedStringArray(
+		["-s", _active_device_serial, "reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port]
+	)
+	var reverse_out: Array = []
+	var reverse_code := OS.execute("adb", reverse_args, reverse_out, true, false)
+
+	if reverse_code != 0:
+		var details := String(reverse_out[0]) if reverse_out.size() > 0 else ""
+		await _err("Failed to set up port forwarding (adb reverse). %s" % details)
+		_stop_http_server()
+		return false
+
+	# 4) Derive dev meta from form + project settings
+	var dev_name := _get_dev_name(form_name)
+	var dev_id := _get_or_create_dev_id(dev_name)
+	var dev_author := _get_dev_author(username)
+	var dev_desc := _get_dev_desc(form_desc)
+
+	var engine_result := _uploader.get_engine_string()
+	if not engine_result.get("success", false):
+		await _err(
+			"Dev run aborted: %s"
+			% String(engine_result.get("error", "Unknown engine error"))
+		)
+		_stop_http_server()
+		return false
+	var dev_engine := String(engine_result.get("engine", ""))
+
+	await _log(
+		"Dev meta → id=%s, author=%s, name=%s"
+		% [dev_id, dev_author, dev_name]
+	)
+
+	# 5) Start activity with download URL
+	var zip_filename := zip_path.get_file()
+	var download_url := "http://localhost:%d/%s" % [_server_port, zip_filename]
+
+	var ok := await _start_dev_on_android(
+		download_url,
+		dev_id,
+		dev_engine,
+		dev_author,
+		dev_name,
+		dev_desc,
+		_active_device_serial
+	)
+
+	if ok:
+		await _log("App is downloading the bundle; your prime should start shortly...")
+		# Keep server running for download
+		await host.get_tree().create_timer(15.0).timeout
+
+	_stop_http_server()
+	_active_device_serial = ""
+
+	return ok
+
+
+# --- Internal: adb helpers ---
 
 func _adb_getprop(serial: String, prop: String) -> String:
 	var out: Array = []
@@ -120,137 +235,7 @@ func _is_app_installed(device_serial: String) -> bool:
 	return text.find("package:") != -1
 
 
-func run_dev_on_phone(
-	host: Node,
-	logs,
-	username: String,
-	form_name: String,
-	form_desc: String,
-	device_serial: String = ""
-) -> bool:
-	# Resolve device serial
-	var devices := list_android_devices()
-
-	if devices.size() == 0:
-		await logs.append_log("[color=orange]No Android device detected via adb.[/color]", "orange")
-		return false
-
-	var chosen_serial := String(device_serial).strip_edges()
-	if chosen_serial == "":
-		if devices.size() == 1:
-			chosen_serial = String(devices[0].get("serial", ""))
-		else:
-			chosen_serial = String(devices[0].get("serial", ""))
-			await (
-				logs
-				. append_log(
-					(
-						"[color=orange]Multiple Android devices detected; selecting the first one: %s[/color]"
-						% String(devices[0].get("label", chosen_serial))
-					),
-					"orange"
-				)
-			)
-
-	if chosen_serial == "":
-		await logs.append_log("[color=red]No device selected.[/color]", "red")
-		return false
-
-	_active_device_serial = chosen_serial
-
-	if not _is_app_installed(_active_device_serial):
-		await logs.append_log(
-			"[color=orange]Primes app is not installed on the selected device.[/color]", "orange"
-		)
-		return false
-
-	await logs.append_log("Packing project for dev run on phone...")
-
-	# 1) Pack current project as web bundle
-	var pack_result := _packager.pack_zip()
-	if not pack_result.get("success", false):
-		await logs.append_log(
-			(
-				"[color=red]Dev run failed to build package:[/color] %s"
-				% String(pack_result.get("error", ""))
-			),
-			"red"
-		)
-		return false
-
-	var zip_path: String = pack_result.get("zip_path", "")
-	await logs.append_log("Dev bundle built at: [code]%s[/code]" % zip_path)
-
-	# 2) Start HTTP server on computer
-	await logs.append_log("Starting local HTTP server...")
-	if not _start_http_server(zip_path, host):
-		await logs.append_log("[color=red]Failed to start HTTP server[/color]", "red")
-		return false
-
-	# 3) Set up adb reverse so device can reach computer's localhost
-	await logs.append_log("Setting up port forwarding...")
-	var reverse_args := PackedStringArray(
-		["-s", _active_device_serial, "reverse", "tcp:%d" % _server_port, "tcp:%d" % _server_port]
-	)
-	var reverse_code := OS.execute("adb", reverse_args, [], true, false)
-
-	if reverse_code != 0:
-		await logs.append_log("[color=red]Failed to set up port forwarding[/color]", "red")
-		_stop_http_server()
-		return false
-
-	# 4) Derive dev meta from form + project settings
-	var dev_name := _get_dev_name(form_name)
-	var dev_id := _get_or_create_dev_id(dev_name)
-	var dev_author := _get_dev_author(username)
-	var dev_desc := _get_dev_desc(form_desc)
-
-	var engine_result := _uploader.get_engine_string()
-	if not engine_result.get("success", false):
-		print(str(engine_result))
-		await logs.append_log(
-			(
-				"[color=red]Dev run aborted:[/color] %s"
-				% String(engine_result.get("error", "Unknown engine error"))
-			),
-			"red"
-		)
-		_stop_http_server()
-		return false
-	var dev_engine := String(engine_result.get("engine", ""))
-
-	await logs.append_log(
-		"Dev meta → id=[b]%s[/b], author=[b]%s[/b], name=[b]%s[/b]" % [dev_id, dev_author, dev_name]
-	)
-
-	# 5) Start activity with download URL
-	var zip_filename := zip_path.get_file()
-	var download_url := "http://localhost:%d/%s" % [_server_port, zip_filename]
-
-	var ok := await _start_dev_on_android(
-		logs,
-		download_url,
-		dev_id,
-		dev_engine,
-		dev_author,
-		dev_name,
-		dev_desc,
-		_active_device_serial
-	)
-
-	if ok:
-		await logs.append_log("App is downloading the bundle, your prime should start shortly...")
-		# Keep server running for download
-		await host.get_tree().create_timer(15.0).timeout
-
-	_stop_http_server()
-	_active_device_serial = ""
-
-	return ok
-
-
 # --- HTTP server ---
-
 
 func _start_http_server(file_path: String, host: Node) -> bool:
 	_server = TCPServer.new()
@@ -267,7 +252,7 @@ func _start_http_server(file_path: String, host: Node) -> bool:
 			break
 
 	if not success:
-		push_error("Failed to start HTTP server on any port")
+		await _err("Failed to start HTTP server on any port.")
 		return false
 
 	_file_to_serve = file_path
@@ -275,7 +260,7 @@ func _start_http_server(file_path: String, host: Node) -> bool:
 	if _process_conn_id == -1:
 		_process_conn_id = host.get_tree().process_frame.connect(_process_http_server)
 
-	print("HTTP server started on port %d" % _server_port)
+	await _log("HTTP server started on port %d" % _server_port)
 	return true
 
 
@@ -355,9 +340,7 @@ func _handle_http_client(client: StreamPeerTCP) -> void:
 
 # --- adb launch ---
 
-
 func _start_dev_on_android(
-	logs,
 	download_url: String,
 	dev_id: String,
 	engine: String,
@@ -366,7 +349,7 @@ func _start_dev_on_android(
 	desc: String,
 	device_serial: String
 ) -> bool:
-	await logs.append_log("Starting Primes app dev run via adb...")
+	await _log("Starting Primes app dev run via adb...")
 
 	var comp := "%s/%s" % [ANDROID_PACKAGE, ANDROID_ACTIVITY]
 
@@ -404,12 +387,10 @@ func _start_dev_on_android(
 	var am_code := OS.execute("adb", am_args, am_out, true, false)
 
 	if am_code != 0:
-		await logs.append_log(
-			(
-				"[color=red]adb shell am start failed (exit %d):[/color]\n[code]%s[/code]"
-				% [am_code, String(am_out[0]) if am_out.size() > 0 else ""]
-			),
-			"red"
+		var out_text := String(am_out[0]) if am_out.size() > 0 else ""
+		await _err(
+			"adb shell am start failed (exit %d). Output: %s"
+			% [am_code, out_text]
 		)
 		return false
 
@@ -417,7 +398,6 @@ func _start_dev_on_android(
 
 
 # --- Helpers: meta building ---
-
 
 func _get_dev_author(username: String) -> String:
 	var u := String(username)
@@ -485,3 +465,26 @@ func _make_dev_id(name: String) -> String:
 	var hex := "%08x%08x" % [hi, lo]
 
 	return "dev_%s_%s" % [slug, hex]
+	
+func _flush_editor() -> void:
+	# Give the editor a chance to repaint + flush Output.
+	# Two frames matches what worked in LogsArea.
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree:
+		await tree.process_frame
+		await tree.process_frame
+
+
+func _log(msg: String) -> void:
+	print(LOG_PREFIX + msg)
+	await _flush_editor()
+
+
+func _warn(msg: String) -> void:
+	push_warning(LOG_PREFIX + msg)
+	await _flush_editor()
+
+
+func _err(msg: String) -> void:
+	push_error(LOG_PREFIX + msg)
+	await _flush_editor()

@@ -100,12 +100,11 @@ func list_android_devices() -> Array:
 
 func dev_run_on_phone(
 	host: Node,
-	logs,
 	username: String,
 	form_name: String,
 	form_desc: String,
 	device_serial: String = ""
 ) -> bool:
 	return await _dev_runner.run_dev_on_phone(
-		host, logs, username, form_name, form_desc, device_serial
+		host, username, form_name, form_desc, device_serial
 	)
