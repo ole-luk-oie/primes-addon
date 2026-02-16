@@ -15,6 +15,7 @@ https://play.google.com/store/apps/details?id=com.olelukoie.primes
 
 1. Develop your project using the **Compatibility renderer**
 2. Open the **Primes** tab in the editor (next to the AssetLib tab)
+3. (Once) Log in by providing your email and entering the activation code
 3. Click **Publish**
 
 That's it.
@@ -28,12 +29,11 @@ See the [Terms of Service](https://primes-app.com/tos/) for details.*
 
 Using this plugin, you also can:
 
-- Add a name and/or description to your project (both optional)
+- Add a comment/description to your project (optional)
 - Run your project in the app on a connected Android phone with one click  
   *(no templates or presets needed, but requires [adb](https://developer.android.com/tools/adb) to be installed and available in PATH)*
 - See a list of your already published projects
 - Edit metadata or delete published projects
-- View crash flags and user reports, and submit appeals
 
 ---
 
@@ -98,7 +98,7 @@ Start where the thing *is*.
 <summary><strong>Reuse freely</strong></summary>
 
 Assets, tools, ideas, whatever.  
-Anything that is legal and helps you express yourself is fair game - just don't let it in the driver's seat.  
+Anything that helps you express yourself is fair game - just don't let it in the driver's seat.  
 And if it starts feeling dishonest, it probably is.
 </details>
 
