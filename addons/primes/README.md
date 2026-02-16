@@ -16,7 +16,7 @@ https://play.google.com/store/apps/details?id=com.olelukoie.primes
 1. Develop your project using the **Compatibility renderer**
 2. Open the **Primes** tab in the editor (next to the AssetLib tab)
 3. (Once) Log in by providing your email and entering the activation code
-3. Click **Publish**
+4. Click **Publish**
 
 That's it.
 
